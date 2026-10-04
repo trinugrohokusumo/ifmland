@@ -4946,7 +4946,7 @@ const UX_TABINFO={
   am:{ok:()=>featOk('am')||(typeof amList==='function'&&amList().length>0),why:'',d:'Rekrut Area Manager untuk mengelola beberapa site sekaligus.'},
   hijau:{ok:()=>S.sites.some(s=>s.svc.includes('waste'))||S.obj>=5||!!(S.tpst&&S.tpst.built),why:'Terbuka setelah Anda punya site dengan layanan sampah.',d:'Kelola pemilahan, bank sampah, dan TPST 3R.'},
   liga:{ok:()=>S.stats.bids>0||S.sites.length>0,why:'Terbuka setelah Anda memasukkan penawaran pertama.',d:'Klasemen vendor FM per kota & pulau, profil 4 kompetitor, kontrak kompetitor yang akan berakhir, dan berita pasar.'},
-  challenge:{ok:()=>S.sites.length>0||!!S.ch,why:'Terbuka setelah Anda memenangkan kontrak pertama.',d:'Bertanding dengan pemain lain dalam rentang waktu yang sama.'}};
+  challenge:{ok:()=>S.sites.length>0||!!S.ch||!!GATE.isAdmin||!!CH.admin||(CH.list||[]).some(c=>c.status!=='arsip'&&chState(c)!=='selesai'),why:'Terbuka setelah Anda memenangkan kontrak pertama, atau saat trainer membuka challenge.',d:'Bertanding dengan pemain lain dalam rentang waktu yang sama.'}};
 const UX_DESC={inbox:'Surat dari mentor, klien, karyawan, dan mitra.'};function uxDesc(k){return UX_TABINFO[k]?UX_TABINFO[k].d:UX_DESC[k]||''}
 function uxTabName(k){const t=TABS.find(x=>x[0]===k);return t?t[1]:k}
 function uxInitUnl(){if(!S)return;if(!S.tabUnl){S.tabUnl={};TABS.forEach(([k])=>S.tabUnl[k]=1)}}
