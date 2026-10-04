@@ -6614,7 +6614,7 @@ function gLanding(){const note='';
    <div><b>Bisa dimainkan di HP?</b><p>Bisa, di browser HP maupun laptop. Progres tersimpan di browser perangkat yang Anda pakai; pindahkan dengan Kode Simpan.</p></div>
    <div><b>Data apa yang disimpan?</b><p>Saat challenge, hanya nama Anda, nama perusahaan game, dan skor yang tampil di papan dan diterima trainer.</p></div></div></div></section>
 
-  <div class="wrap"><footer><div class="brandmk"><div class="logo" role="img" aria-label="Logo IFM Land"></div>IFM <span style="color:var(--or-ink)">Land</span></div><span>© 2026 IFM Land · Simulasi edukasi, bukan nasihat hukum atau keuangan.</span></footer></div></div>`}
+  <div class="wrap"><footer><div class="brandmk"><div class="logo" role="img" aria-label="Logo IFM Land"></div>IFM <span style="color:var(--or-ink)">Land</span></div><span>© 2026 IFM Land · Simulasi edukasi, bukan nasihat hukum atau keuangan. · <a href="https://trinugrohokusumo.github.io/ifmland/privasi.html" target="_blank" rel="noopener" style="color:inherit">Kebijakan privasi</a></span></footer></div></div>`}
 
 /* ---------- formulir pendaftaran ---------- */
 function gForm(){const p=GATE.player||{};const f=GATE.form||(GATE.form={email:p.email||(GATE.me&&GATE.me.email)||'',nama:p.nama||(GATE.me&&GATE.me.name)||'',jab:p.jab||'',pt:p.pt||'',kota:p.kota||'',kelas:p.kelas||'',c:[0,0,0,0]});
@@ -6932,7 +6932,7 @@ function sbProfHtml(){const p=SBK.prof||{};const f=GATE.sbf||(GATE.sbf={nama:p.o
   <label class="f"><span>Nama lengkap <span style="color:var(--crit)">*</span></span><input type="text" data-sbf="nama" maxlength="60" value="${esc(f.nama)}" placeholder="Tri Nugroho Kusumo" autocomplete="name"></label>
   <label class="f"><span>Instansi / perusahaan asal <span style="color:var(--crit)">*</span></span><input type="text" data-sbf="inst" maxlength="80" value="${esc(f.inst)}" placeholder="PT Manajemen Fasilitas Integrasi" autocomplete="organization"></label>
   <label class="f">Kode kelas / angkatan (opsional)<input type="text" data-sbf="kelas" maxlength="24" value="${esc(f.kelas)}" placeholder="mis. FM-OKT-26"></label>
-  <div class="agree"><b class="small">Persetujuan</b>${SB_CONSENT.map((t,i)=>`<label class="chk"><input type="checkbox" data-sbc="${i}" ${f.c[i]?'checked':''}><span>${t}</span></label>`).join('')}</div>
+  <div class="agree"><b class="small">Persetujuan · <a href="https://trinugrohokusumo.github.io/ifmland/privasi.html" target="_blank" rel="noopener" style="font-weight:600">baca kebijakan privasi</a></b>${SB_CONSENT.map((t,i)=>`<label class="chk"><input type="checkbox" data-sbc="${i}" ${f.c[i]?'checked':''}><span>${t}</span></label>`).join('')}</div>
   ${GATE.sbErr?`<div class="small" role="alert" style="color:var(--crit)">${esc(GATE.sbErr)}</div>`:''}
   <div class="tiny muted" id="sbHint" style="text-align:right">${ok?'':'Isi nama, instansi, dan centang semua persetujuan.'}</div><div class="spread" style="gap:10px"><button class="btn" data-g="sbkeluar">Keluar</button><button class="btn pri" data-g="sbsimpan" id="sbGo" ${ok?'':'disabled'}>Simpan & mulai</button></div></div>`}
 function sbProfInput(e){const t=e.target;if(!GATE.sbf)return;if(t.dataset.sbf)GATE.sbf[t.dataset.sbf]=t.value;else if(t.dataset.sbc!=null)GATE.sbf.c[+t.dataset.sbc]=t.checked?1:0;else return;
