@@ -7459,7 +7459,7 @@ setInterval(()=>{try{bldLegendInit();bldLegendUpd()}catch(e){}},1500);
 `;document.head.appendChild(st)})();
 
 /* ============================ v71: FUNGSI HR + TAB TEAM RINGKAS (dikelompokkan per site) ============================ */
-const HR_UNLOCK=20,HR_REC_COST=6.5e6,HR_REC_CAP=8; // gaji+BPJS recruiter/bln, rekrutan/minggu per recruiter
+const HR_UNLOCK=20,HR_REC_COST=6.5e6,HR_REC_CAP=10; // gaji+BPJS recruiter/bln, rekrutan/minggu per recruiter
 function hrS(){if(!S.hr)S.hr={rec:0,agency:false,pol:{minAtt:60,offer:1,standby:5,lead:true},q:[],acc:0,day:null,last:null,res0:null};const h=S.hr;h.pol=Object.assign({minAtt:60,offer:1,standby:5,lead:true},h.pol||{});h.q=h.q||[];return h}
 function hrSN(id){const s=siteOf(id);return s?bById(s.b).n:'site'}
 function hrOpen(){return S.emps.length>=HR_UNLOCK||hrS().rec>0||hrS().agency}
@@ -7498,10 +7498,10 @@ function hrCard(){const h=hrS();const n=S.emps.length;
   const needs=hrNeeds().reduce((a,x)=>a+x.n,0);
   return `<div class="card"><div class="spread"><b>🧑‍💼 Fungsi HR</b><span class="chip ${hrOn()?'good':''}">${hrOn()?'aktif':'belum aktif'}</span></div>
   <div class="tiny muted" style="margin:2px 0 8px">Pemilik membuat kebijakan; tim HR yang merekrut dan menempatkan staf operasional. Supervisor, Site Manager, dan Area Manager tetap Anda pilih sendiri.</div>
-  <div class="grid2">${kpi('Recruiter',h.rec+` · ${h.rec*HR_REC_CAP}/minggu`)}${kpi('Biaya tim HR',jt(hrCostMonth())+'/bln')}${kpi('Lowongan dicari',h.q.length)}${kpi('Kebutuhan saat ini',needs)}</div>
+  <div class="grid2">${kpi('Recruiter',h.rec+` · kuota ${Math.floor(h.acc||0)}/${h.rec*HR_REC_CAP}`)}${kpi('Biaya tim HR',jt(hrCostMonth())+'/bln')}${kpi('Lowongan dicari',h.q.length)}${kpi('Kebutuhan saat ini',needs)}</div>
   <div class="row" style="margin:8px 0;gap:6px;flex-wrap:wrap"><button class="btn sm pri" data-hr="recAdd">+ Recruiter (${jt(HR_REC_COST)}/bln)</button>${h.rec?`<button class="btn sm" data-hr="recDel">− Recruiter</button>`:''}
    <button class="btn sm ${h.agency?'pri':''}" data-hr="agency">${h.agency?'✓ Kontrak agen penyalur':'Kontrak agen penyalur'}</button></div>
-  <div class="tiny muted" style="margin-bottom:6px">Recruiter: ${HR_REC_CAP} rekrutan/minggu, kandidat disaring (2–4 hari). Agen: cepat (1–2 hari), ${jt(bulkFee())}/orang, mutu kandidat lebih rendah; dipakai bila kapasitas recruiter habis.</div>
+  <div class="tiny muted" style="margin-bottom:6px">Recruiter: wawancara & rekrut hingga ${HR_REC_CAP} orang sekaligus (2–4 hari, kandidat disaring); kuotanya pulih penuh dalam seminggu. Agen: cepat (1–2 hari), ${jt(bulkFee())}/orang, mutu kandidat lebih rendah; dipakai bila kapasitas recruiter habis.</div>
   <div class="hrpol"><label>Attitude minimal ${sel('minAtt',[[50,'50'],[60,'60'],[70,'70'],[80,'80']])}</label><label>Gaji tawaran ${sel('offer',[[1,'standar'],[1.05,'+5%'],[1.1,'+10%']])}</label><label>Tenaga cadangan ${sel('standby',[[0,'0%'],[5,'5%'],[10,'10%']])}</label><label>Rekrut Leader ${sel('lead',[['true','ya'],['false','tidak']])}</label></div>
   ${h.q.length?`<div class="tiny" style="margin-top:6px"><b>Antrean:</b> ${h.q.slice(0,8).map(x=>`${ROLES[x.role].n} · ${x.site?esc(hrSN(x.site)):'cadangan'} (${x.due>day()?'±'+(x.due-day())+' hr':'hari ini'})`).join(' · ')}${h.q.length>8?' · …':''}</div>`:''}</div>`}
 // pengelompokan karyawan per lokasi
@@ -7522,7 +7522,7 @@ document.addEventListener('change',e=>{const t=e.target.closest&&e.target.closes
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-hr]');if(!b||!S)return;e.preventDefault();e.stopPropagation();const a=b.dataset.hr,h=hrS();
   if(a==='grp'){S.ui.grpOpen=S.ui.grpOpen||{};const k=b.dataset.g;const cur=S.ui.grpOpen[k]!=null?S.ui.grpOpen[k]:S.emps.length<=25;S.ui.grpOpen[k]=!cur}
   else if(a==='emp'){S.ui.empOpen=S.ui.empOpen||{};const id=b.dataset.id;S.ui.empOpen[id]=!S.ui.empOpen[id]}
-  else if(a==='recAdd'){h.rec++;mail('HR','Recruiter baru bergabung',`Tim rekrutmen kini ${h.rec} orang (kapasitas ${h.rec*HR_REC_CAP} rekrutan/minggu). Biaya ${jt(hrCostMonth())}/bulan dibayar tiap tanggal 1. Lowongan site dan tenaga cadangan akan diisi otomatis sesuai kebijakan.`);toast('Recruiter ditambahkan')}
+  else if(a==='recAdd'){h.rec++;h.acc=Math.min(h.rec*HR_REC_CAP,(h.acc||0)+HR_REC_CAP);mail('HR','Recruiter baru bergabung',`Tim rekrutmen kini ${h.rec} orang; tiap recruiter bisa mewawancarai dan merekrut hingga ${HR_REC_CAP} orang sekaligus (kuota pulih dalam seminggu). Biaya ${jt(hrCostMonth())}/bulan dibayar tiap tanggal 1. Lowongan site dan tenaga cadangan akan diisi otomatis sesuai kebijakan.`);toast('Recruiter ditambahkan')}
   else if(a==='recDel'){if(h.rec>0)h.rec--;toast('Recruiter dikurangi')}
   else if(a==='agency'){h.agency=!h.agency;toast(h.agency?'Kontrak agen penyalur aktif':'Kontrak agen penyalur dihentikan')}
   else if(a==='bulkK3'||a==='bulkRaise'){const k=b.dataset.g;const L=S.emps.filter(x=>timGrpKey(x)===k);
