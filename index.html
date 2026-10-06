@@ -7479,17 +7479,22 @@ function hrPickCand(role,city,via){const h=hrS(),p=h.pol;const q=(via==='agen'?.
   best.wage=Math.round(wage(role,city==null?undefined:city)*p.offer/1e3)*1e3;if(via!=='agen'&&best.moral<p.minAtt)best.moral=clamp(p.minAtt+rint(0,6),0,100);best.joined=day();best.hrVia=via;return best}
 function hrDaily(d){if(!S)return;const h=hrS();
   // laporan harian kemarin
-  if(h.day&&h.day.d!==d){const r=h.day;const open=h.q.length;if(hrOn()&&(r.res||r.fill||r.agen)){mail('HR',`Laporan HR harian · ${r.res} resign · ${r.fill} terisi · ${open} dicari`,
-    `Kemarin:\n• Resign / keluar: ${r.res} orang\n• Lowongan terisi: ${r.fill} orang${r.agen?` (${r.agen} lewat agen, biaya ${jt(r.agenFee)})`:''}\n• Masih dicari: ${open} posisi${open?`\n  ${h.q.slice(0,6).map(x=>`${ROLES[x.role].n} · ${x.site?hrSN(x.site):'cadangan'}`).join('\n  ')}${open>6?'\n  …':''}`:''}\n\nKebijakan saat ini: attitude minimal ${h.pol.minAtt}, gaji tawaran ${Math.round(h.pol.offer*100)}% standar, cadangan ${h.pol.standby}%. Ubah di tab Team → Fungsi HR.`)}}
+  if(h.day&&h.day.d!==d){const r=h.day;const open=h.q.length;if(hrOn()&&(r.res||r.fill||r.agen||r.place)){mail('HR',`Laporan HR harian · ${r.res} resign · ${r.fill} terisi · ${open} dicari`,
+    `Kemarin:\n• Resign / keluar: ${r.res} orang\n• Ditempatkan dari standby: ${r.place||0} orang\n• Rekrutan baru bergabung: ${r.fill} orang${r.agen?` (${r.agen} lewat agen, biaya ${jt(r.agenFee)})`:''}\n• Masih dicari: ${open} posisi${open?`\n  ${h.q.slice(0,6).map(x=>`${ROLES[x.role].n} · ${x.site?hrSN(x.site):'cadangan'}`).join('\n  ')}${open>6?'\n  …':''}`:''}\n\nKebijakan saat ini: attitude minimal ${h.pol.minAtt}, gaji tawaran ${Math.round(h.pol.offer*100)}% standar, cadangan ${h.pol.standby}%. Ubah di tab Team → Fungsi HR.`)}}
   const resNow=S.stats.resign||0;if(h.res0==null)h.res0=resNow;h.day={d,res:Math.max(0,resNow-h.res0),fill:0,agen:0,agenFee:0};h.res0=resNow;
   if(!hrOn())return;
   if(dom(d)===1&&h.rec>0)spend(hrCostMonth(),`Gaji tim rekrutmen (${h.rec} recruiter)`);
-  // isi antrean lowongan
+  // 1) pakai dulu karyawan standby yang cocok (termasuk yang direkrut pemain sendiri) — tidak merekrut ganda
+  S.sites.filter(s=>s.status==='aktif'||s.status==='mobilisasi').forEach(s=>hrRoles().forEach(r=>{let k=siteShort(s,r);if(k<=0)return;const c=siteCity(s);
+    const pool=S.emps.filter(e=>!e.siteId&&e.role===r&&!isAM(e)).sort((a,b)=>(needMess(a,c)?1:0)-(needMess(b,c)?1:0));
+    for(const e of pool){if(k<=0)break;e.siteId=s.id;k--;h.day.place=(h.day.place||0)+1;log(`HR: ${e.name} (standby) ditempatkan di ${bById(s.b).n}`)}}));
+  // 2) rapikan antrean: buang lowongan yang sudah terisi (oleh pemain, standby, atau sudah tidak perlu)
+  {const keep=[];const cnt={};h.q.forEach(x=>{const key=(x.site||'-')+'|'+x.role;let lim;if(x.site){const s=siteOf(x.site);lim=s&&(s.status==='aktif'||s.status==='mobilisasi')?siteShort(s,x.role):0}else{const n=hrNeeds().find(y=>!y.site&&y.role===x.role);lim=n?n.n:0}
+    cnt[key]=(cnt[key]||0)+1;if(cnt[key]<=lim)keep.push(x)});h.q=keep}
+  // 3) isi antrean lowongan
   hrNeeds().forEach(n=>{const k=n.n-hrQueued(n.site,n.role);for(let i=0;i<k;i++)h.q.push({site:n.site,role:n.role,at:d,due:d+(h.rec>0?rint(2,4):rint(1,2))})});
-  // buang lowongan yang sudah tidak perlu
-  h.q=h.q.filter(x=>{if(!x.site)return true;const s=siteOf(x.site);return s&&(s.status==='aktif'||s.status==='mobilisasi')&&siteShort(s,x.role)>0});
   h.acc=hrCapDay();
-  const due=h.q.filter(x=>d>=x.due);due.forEach(x=>{let via=null;if(h.rec>0&&h.acc>=1){via='recruiter';h.acc-=1}else if(h.agency){via='agen';const fee=bulkFee();if(S.cash<fee)return;spend(fee,`Agen penyalur: ${ROLES[x.role].n}`);h.day.agen++;h.day.agenFee+=fee}
+  const due=h.q.filter(x=>d>=x.due);due.forEach(x=>{if(x.site){const s0=siteOf(x.site);if(!s0||siteShort(s0,x.role)<=0){h.q=h.q.filter(y=>y!==x);return}}let via=null;if(h.rec>0&&h.acc>=1){via='recruiter';h.acc-=1}else if(h.agency){via='agen';const fee=bulkFee();if(S.cash<fee)return;spend(fee,`Agen penyalur: ${ROLES[x.role].n}`);h.day.agen++;h.day.agenFee+=fee}
     if(!via)return;const s=x.site?siteOf(x.site):null;const city=s?siteCity(s):'jkt';const e=hrPickCand(x.role,city,via);if(s)e.siteId=s.id;S.emps.push(e);startTraining(e,'induksi');h.q=h.q.filter(y=>y!==x);h.day.fill++;
     log(`HR: ${e.name} (${ROLES[x.role].n}) bergabung${s?` untuk ${bById(s.b).n}`:' sebagai cadangan'} lewat ${via==='agen'?'agen':'recruiter'}`)});
   markDirty()}
