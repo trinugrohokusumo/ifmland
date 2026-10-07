@@ -7398,7 +7398,7 @@ function initSplit(){const sp=$('#split'),mn=document.querySelector('.main');if(
   sp.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();set(cur()+(e.key==='ArrowLeft'?40:-40),true)}if(e.key==='Home'){e.preventDefault();set(null,true)}});
   window.addEventListener('resize',()=>{const v=mn.style.getPropertyValue('--pw');if(v)set(parseFloat(v))})}
 initSplit();
-if(S){attachTpstFns();completeProcesses();S.ui.layers=S.ui.layers||{traffic:1,transit:1,waste:1,staff:1,people:1};catchUp();renderLayers();renderPanel(true)}else{showSetup()}
+if(S){try{attachTpstFns();completeProcesses();S.ui.layers=S.ui.layers||{traffic:1,transit:1,waste:1,staff:1,people:1};catchUp();renderLayers()}catch(e){reportErr('mulai',e)}setTimeout(()=>{try{renderPanel(true)}catch(e){reportErr('panel awal',e)}},0)}else{showSetup()}
 requestAnimationFrame(frame);
 syncInit();
 gateBoot().catch(e=>{console.warn('[IFM Land] gerbang',e);gateUnlock()});
@@ -7491,7 +7491,7 @@ setInterval(()=>{try{bldLegendInit();bldLegendUpd()}catch(e){}},1500);
 `;document.head.appendChild(st)})();
 
 /* ============================ v71: FUNGSI HR + TAB TEAM RINGKAS (dikelompokkan per site) ============================ */
-const HR_UNLOCK=20,HR_REC_COST=6.5e6,HR_REC_CAP=3,HR_MASS_CAP=10,HR_MASS_DAYS=5,HR_MASS_COST=5e6,HR_MASS_CD=30;
+var HR_UNLOCK=20,HR_REC_COST=6.5e6,HR_REC_CAP=3,HR_MASS_CAP=10,HR_MASS_DAYS=5,HR_MASS_COST=5e6,HR_MASS_CD=30;
 function hrMassOn(){const h=hrS();return h.mass&&day()<h.mass.until}
 function hrCapDay(){return hrS().rec*(hrMassOn()?HR_MASS_CAP:HR_REC_CAP)} // gaji+BPJS recruiter/bln, rekrutan/minggu per recruiter
 function hrS(){if(!S.hr)S.hr={rec:0,agency:false,pol:{minAtt:60,offer:1,standby:5,lead:true},q:[],acc:0,day:null,last:null,res0:null};const h=S.hr;h.pol=Object.assign({minAtt:60,offer:1,standby:5,lead:true},h.pol||{});h.q=h.q||[];return h}
