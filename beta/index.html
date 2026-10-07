@@ -7403,6 +7403,38 @@ requestAnimationFrame(frame);
 syncInit();
 gateBoot().catch(e=>{console.warn('[IFM Land] gerbang',e);gateUnlock()});
 try{orgV70Migrate()}catch(e){reportErr('migrasi v70',e)}
+
+/* v73: Mode Lapangan di HP — ukuran ulang saat rotasi, HUD ringkas, tidak menutupi layar */
+fResize=function(){if(!FIELD.on||!FIELD.r)return;const el=$('#field');if(!el)return;const rc=el.getBoundingClientRect();const W=Math.max(1,Math.round(rc.width)),H=Math.max(1,Math.round(rc.height));
+  const k=clamp(Math.min(W/1100,H/680),.5,1),kt=clamp(k*1.3,.62,1);el.style.setProperty('--k',k.toFixed(3));el.style.setProperty('--kt',kt.toFixed(3));
+  const phone=H<500||W<720;el.classList.toggle('fsm',phone);el.classList.toggle('fmid',W<1280);el.classList.toggle('fport',phone&&H>W);el.classList.toggle('fland',phone&&W>=H);
+  const port=phone&&H>W;if(port!==!!FIELD.portAdj){FIELD.dist=(FIELD.dist||26)*(port?1.45:1/1.45);FIELD.portAdj=port}
+  if(port){const st=$('#fStats');if(st)el.style.setProperty('--fpt',(st.getBoundingClientRect().bottom-rc.top+6)+'px')}
+  FIELD.r.setSize(W,H,false);FIELD.cam.aspect=W/H;FIELD.cam.updateProjectionMatrix();FIELD.lastWH=W+'x'+H;fQtSync()};
+{const _ft73=fieldTeardown;fieldTeardown=function(){FIELD.portAdj=false;return _ft73.apply(this,arguments)}}
+function fQtSync(){const el=$('#field');if(!el)return;let b=$('#fQT');if(!b){const hud=$('#fHud');if(!hud)return;b=document.createElement('button');b.id='fQT';b.className='pn';b.type='button';b.addEventListener('click',e=>{e.stopPropagation();el.classList.toggle('qopen');fQtSync()});b.addEventListener('pointerdown',e=>e.stopPropagation());hud.appendChild(b)}
+  const L=$('#fQL');let n=0,t=0;if(L){L.querySelectorAll('div').forEach(d=>{t++;if(/✓/.test(d.textContent))n++})}b.innerHTML=`📋 Sidak${t?` ${n}/${t}`:''} ${el.classList.contains('qopen')?'▴':'▾'}`}
+(function(){const re=()=>{if(!FIELD.on)return;[0,120,350,700].forEach(ms=>setTimeout(()=>{try{fResize()}catch(e){}},ms))};window.addEventListener('orientationchange',re);if(window.visualViewport)visualViewport.addEventListener('resize',re);
+  setInterval(()=>{if(!FIELD.on)return;const el=$('#field');if(!el)return;const rc=el.getBoundingClientRect();if(Math.round(rc.width)+'x'+Math.round(rc.height)!==FIELD.lastWH)try{fResize()}catch(e){}else try{fQtSync()}catch(e){}},500)})();
+(function(){const st=document.createElement('style');st.textContent=`
+#field{overflow:hidden;contain:layout paint}
+@media (max-width:620px){header.top{max-width:100%;overflow:hidden}header.top .stats{min-width:0;overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap}header.top .stats::-webkit-scrollbar{display:none}header.top .stat{flex:0 0 auto}html,body{overflow-x:hidden}}
+#fQT{display:none;position:absolute;font:inherit;font-size:12px;font-weight:700;color:#ffd36b;padding:6px 10px;cursor:pointer;pointer-events:auto}
+#field.fsm #fQT{display:block}#field.fsm.qopen #fQuest{display:block!important}
+#field.fland #fQT{left:10px;top:calc(10px + 128px*var(--kt))}#field.fland.qopen #fQuest{top:calc(14px + 162px*var(--kt));left:10px;max-height:calc(100% - 200px*var(--kt));overflow:auto}
+#field.fland #fStats{max-width:calc(100vw - 230px*var(--kt) - 20px);overflow-x:auto;scrollbar-width:none}
+#field.fport #fStats{left:6px;right:6px;top:6px;transform:none;justify-content:flex-start;gap:4px;flex-wrap:wrap!important}
+#field.fport #fStats::-webkit-scrollbar,#field.fland #fStats::-webkit-scrollbar{display:none}
+#field.fport #fStats .st{padding:3px 7px;flex:none}#field.fport #fStats .st span{font-size:8.5px}#field.fport #fStats .st b{font-size:13px;white-space:nowrap}
+#field.fport #fStats button{padding:4px 8px;font-size:11px;flex:none}
+#field.fport #fMap{top:var(--fpt,96px);left:6px;transform:none;padding:4px}#field.fport #fMap .t{display:none}#field.fport #fMapC{width:112px!important;height:70px!important}
+#field.fport #fQT{left:130px;top:var(--fpt,96px)}
+#field.fport.qopen #fQuest{top:calc(var(--fpt,96px) + 40px);left:126px;right:6px;width:auto;transform:none;font-size:12px;max-height:45%;overflow:auto}
+#field.fport #fTop{top:auto;bottom:4px;left:50%;right:auto;transform:translateX(-50%);padding:2px 8px;min-width:0}#field.fport #fTop .tt{font-size:12px}
+#field.fport.qopen #fTop{display:none}
+#field.fport #fBanner{top:calc(var(--fpt,96px) + 86px)}
+#field.fport #fAct{bottom:6px;max-height:60%}
+`;document.head.appendChild(st)})();
 /* ============================ v72: PUSAT MASALAH + PORTOFOLIO SITE PER KOTA + LEGENDA GEDUNG + LIHAT SELURUH KOTA ============================ */
 function probList(){if(!S)return [];const P=[];const d=day();const act=S.sites.filter(s=>s.status==='aktif'||s.status==='mobilisasi');
   const add=(sev,ic,t,sub,acts)=>P.push({sev,ic,t,sub,acts});const nm=s=>esc(bById(s.b).n);const open=s=>`<button class="btn sm" data-act="openSite" data-id="${s.id}">Buka site</button>`;
@@ -7455,7 +7487,7 @@ setInterval(()=>{try{bldLegendInit();bldLegendUpd()}catch(e){}},1500);
 .bldleg{position:absolute;left:10px;top:44px;display:flex;flex-wrap:wrap;gap:3px 10px;background:rgba(14,20,26,.6);color:#fff;border-radius:8px;padding:4px 9px;font-size:11px;max-width:min(560px,calc(100% - 20px));pointer-events:auto;z-index:3}
 .bldleg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}.bldleg i.rg{border:2px solid #e3a21a;border-radius:50%;width:8px;height:8px}.bldleg .blt{font-weight:700;opacity:.8}
 .bldleg .bllink{background:none;border:0;color:#9cd3ff;font-size:11px;cursor:pointer;padding:0}
-@media (max-width:620px){.bldleg{display:none}.probbtn .pbl{display:none}.probbtn{padding:4px 9px;margin-right:4px}}
+@media (max-width:620px){.bldleg{display:none}.probbtn .pbl{display:none}.probbtn{position:fixed;left:10px;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:47;margin:0;padding:7px 12px;box-shadow:0 4px 14px rgba(0,0,0,.25)}body.mapfull .probbtn,#field[style*="block"]~.probbtn{display:none}}
 `;document.head.appendChild(st)})();
 
 /* ============================ v71: FUNGSI HR + TAB TEAM RINGKAS (dikelompokkan per site) ============================ */
