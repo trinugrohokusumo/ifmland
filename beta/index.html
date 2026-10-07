@@ -339,6 +339,10 @@ body.hc .chip.good::before{content:'✓ '}body.hc .chip.warn::before{content:'�
 body.hc .gl{text-decoration-thickness:2px}
 #uxPop>.spread{flex-wrap:nowrap;align-items:flex-start}#uxFab{touch-action:none;user-select:none;-webkit-user-select:none}#uxFab.mini{padding:0;width:52px;height:52px;justify-content:center}#uxFab.mini b{display:none}#uxFab.mini span{font-size:24px}#uxFab.dragging{cursor:grabbing;opacity:.85;box-shadow:0 12px 30px rgba(0,0,0,.35);transform:scale(1.06)}
 .campbar{display:flex;align-items:center;justify-content:space-between;gap:10px;background:color-mix(in srgb,var(--accent) 10%,var(--surface));border:1px solid color-mix(in srgb,var(--accent) 35%,var(--line));border-radius:12px;padding:7px 14px;font-size:13.5px;cursor:pointer;min-width:0}.campbar[hidden]{display:none}.campbar>span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.campbar .cbgo{flex:none;font-weight:600;color:var(--accent)}.campbar:hover{border-color:var(--accent)}body.imm .campbar{display:none}@media (max-width:560px){.campbar{font-size:12.5px;padding:6px 10px}.campbar>span:first-child{white-space:normal}}
+.tloc{font-size:12px;margin:2px 0;color:var(--ink-2)}.tloc b{color:var(--ink)}.tloc.act{color:var(--accent)}.tloc.act b{color:var(--accent)}.tloc.done{color:var(--good)}.tloc .tpt{margin-left:6px;padding:1px 7px;border-radius:9px;background:var(--accent-soft);font-weight:600;font-size:11px}.tloc.done .tpt{background:var(--good-soft)}
+.tfbar{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.tfc{border:1px solid var(--line);background:transparent;border-radius:14px;padding:3px 10px;font-size:12px;cursor:pointer;color:inherit}.tfc.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tstrat ul{margin:4px 0 2px 18px;padding:0}.tstrat li{margin:2px 0}
+@media(max-width:600px){.tlx{display:none}}
 </style>
 
 <div class="app">
@@ -2897,7 +2901,7 @@ function spawnTenders(d){const open=S.tenders.filter(t=>t.status==='open');if(op
 function bankrupt(){mail('Pengadilan Niaga','Perusahaan dinyatakan pailit','Kas negatif lebih dari 30 hari dengan kewajiban tertunggak. Anda bisa memulai perusahaan baru dari menu Perusahaan (Mulai ulang).');S.speed=0}
 
 /* ============================ PLAYER ACTIONS ============================ */
-const NAV_ACTS=new Set(['empCard','campCopy','ligaC','hhAM','amkHide','amkReset','pinCmp','autoPause','pastToggle','arrAuto','arrFund','fcSet','fcTender','fcAdd','fcOpen','timReset','chEnter','chJoin','chView','chLeave','chCode','logout','finOpen','finFilter','finHelp','toggleRelHelp','makeCode','copyCode','loadCode','toggleHelp','tab','openTender','backTender','openSite','backSite','layer','bld','readAll','copyRapor','reset','resetNo','resetYes']);
+const NAV_ACTS=new Set(['tndF','empCard','campCopy','ligaC','hhAM','amkHide','amkReset','pinCmp','autoPause','pastToggle','arrAuto','arrFund','fcSet','fcTender','fcAdd','fcOpen','timReset','chEnter','chJoin','chView','chLeave','chCode','logout','finOpen','finFilter','finHelp','toggleRelHelp','makeCode','copyCode','loadCode','toggleHelp','tab','openTender','backTender','openSite','backSite','layer','bld','readAll','copyRapor','reset','resetNo','resetYes']);
 function act(a,el){if(typeof FIELD!=='undefined')FIELD.ua=performance.now();const d=el?el.dataset:{};if(!NAV_ACTS.has(a))S.stats.decisions++;
   switch(a){
   case 'arrPay':{const a=arrById(d.id);if(!a){toast('Tunggakan sudah lunas');break}if(d.k==='part'){const n=Math.floor(Math.max(0,S.cash));if(n>0)arrPay(a,n,'manual')}else arrPay(a,arrLeft(a),'manual');break}
@@ -2924,6 +2928,7 @@ function act(a,el){if(typeof FIELD!=='undefined')FIELD.ua=performance.now();cons
   case 'ppmOT':ppmOT(d.site,d.i);break;
   case 'campCopy':try{navigator.clipboard.writeText(campRaporTxt());toast('Laporan disalin')}catch(e){}break;
   case 'tab':if(d.bar&&uxTabLocked(d.v)){toast(uxTabWhy(d.v));break}uxSeen(d.v);S.ui.tab=d.v;if(d.v!=='tender')S.ui.tender=S.ui.tender;break;
+  case 'tndF':S.ui.tndF=d.v||'all';break;
   case 'openTender':{S.ui.tab='tender';S.ui.tender=d.id;const t_=tById(d.id);if(t_)camTo(t_.b);break}
   case 'backTender':S.ui.tender=null;break;
   case 'openSite':{S.ui.tab='site';S.ui.site=d.id;const s_=siteOf(d.id);if(s_)camTo(s_.b);break}
@@ -3652,20 +3657,44 @@ function agenda(){const d=day();const items=[];(S.arrears||[]).forEach(a=>items.
 
 function tenderGate(b,t){if(t&&t.renew)return null;if(inPKPU())return 'Dalam PKPU: tidak bisa ikut tender baru';if(b.gov&&!featOk('lpse'))return lockMsg('lpse');if(b.gov&&(S.co.legal!=='PT'||!S.co.iso))return 'Tender LPSE butuh PT dan ISO 9001';if(b.cls==='menengah'&&!featOk('tMen'))return lockMsg('tMen');if(b.cls==='besar'&&!featOk('tBesar'))return lockMsg('tBesar');if(b.cls==='menengah'&&(S.co.legal!=='PT'||S.co.office<1))return 'Butuh PT dan kantor ruko';if(b.cls==='besar'&&(S.co.legal!=='PT'||!S.co.iso||S.co.office<2||S.rep<60))return 'Butuh PT, ISO 9001, ruko 3 lantai, reputasi ≥ 60';if(activeSites().length>=siteCap())return `Kapasitas manajemen penuh: ${siteCap()} site (kantor ${officeOf().maxSites} + 5 per kantor cabang). Pindah kantor atau buka cabang.`;return null}
 function pTender(){if(S.ui.tender){const t=tById(S.ui.tender);if(t)return tenderDetail(t)}
-  const open=S.tenders.filter(t=>t.status==='open'||t.status==='submitted');const done=S.tenders.filter(t=>t.status==='won'||t.status==='lost').slice(-8).reverse();
-  return `<div class="sec"><h3>Tender terbuka</h3><div class="small muted">Tender muncul dari portal pengadaan setiap pagi. Pengumuman pemenang pukul 10.00 di hari batas.</div>
+  const open0=S.tenders.filter(t=>t.status==='open'||t.status==='submitted').sort((a,b)=>a.deadline-b.deadline);const open=tndFilt(open0);const done=S.tenders.filter(t=>t.status==='won'||t.status==='lost').slice(-8).reverse();
+  return `<div class="sec"><h3>Tender terbuka</h3><div class="small muted">Tender muncul dari portal pengadaan setiap pagi. Pengumuman pemenang pukul 10.00 di hari batas. Urut: batas waktu terdekat.</div>${tndBar(open0)}
   ${open.map(t=>{const b=bById(t.b);const g=tenderGate(b,t);return `<div class="card click" data-act="openTender" data-id="${t.id}"><div class="spread"><b>${b.n}</b>${t.pl?'<span class="chip good">Penunjukan langsung</span>':t.src==='ooj'?'<span class="chip good">Undangan</span>':''}${t.status==='submitted'?'<span class="chip data">Diajukan</span>':g?'<span class="chip warn">Terkunci</span>':'<span class="chip acc">Terbuka</span>'}</div>
-    <div class="row small muted"><span>${b.type} · ${b.dist}</span><span class="chip">${b.cls}</span>${t.svc.map(s=>`<span class="chip">${svcName(s)}</span>`).join('')}<span>${b.area.toLocaleString('id-ID')} m²</span></div>
-    <div class="spread small"><span>Klien: <b>${t.pers}</b>${t.renew?' <span class="chip acc">Tender ulang · Anda incumbent</span>':''}</span><span class="mono">batas ${dstr(t.deadline,1)} 10.00</span></div>${t.cStart!=null?`<div class="tiny muted">Kontrak ${dY(t.cStart)} – ${dY(t.cEnd)} (${t.cMonths} bln)${t.renew?'':` · mobilisasi maks ${t.mobWin} hari`}${t.top!=null?` · TOP ${t.top} hari`:''}</div>`:''}${g?`<div class="tiny" style="color:var(--warn)">${g}</div>`:''}</div>`}).join('')||'<div class="empty">Belum ada tender. Tender baru biasanya muncul pukul 08.00.</div>'}</div>
-  <div class="sec"><h3>Riwayat hasil</h3>${done.map(t=>`<div class="spread small card click" data-act="openTender" data-id="${t.id}"><span>${bById(t.b).n}</span><span class="chip ${t.status==='won'?'good':'crit'}">${t.status==='won'?'Menang':'Kalah'}</span></div>`).join('')||'<div class="empty">Belum ada.</div>'}</div>`}
+    ${tndLocChip(b,t)}<div class="row small muted"><span>${b.type} · ${b.dist}</span><span class="chip">${b.cls}</span>${t.svc.map(s=>`<span class="chip">${svcName(s)}</span>`).join('')}<span>${b.area.toLocaleString('id-ID')} m²</span></div>
+    <div class="spread small"><span>Klien: <b>${t.pers}</b>${t.renew?' <span class="chip acc">Tender ulang · Anda incumbent</span>':''}</span><span class="mono">batas ${dstr(t.deadline,1)} 10.00</span></div>${t.cStart!=null?`<div class="tiny muted">Kontrak ${dY(t.cStart)} – ${dY(t.cEnd)} (${t.cMonths} bln)${t.renew?'':` · mobilisasi maks ${t.mobWin} hari`}${t.top!=null?` · TOP ${t.top} hari`:''}</div>`:''}${g?`<div class="tiny" style="color:var(--warn)">${g}</div>`:''}</div>`}).join('')||(open0.length?'<div class="empty">Tidak ada tender di filter ini.</div>':'<div class="empty">Belum ada tender. Tender baru biasanya muncul pukul 08.00.</div>')}</div>
+  <div class="sec"><h3>Riwayat hasil</h3>${done.map(t=>`<div class="spread small card click" data-act="openTender" data-id="${t.id}"><span>${(kotaById(mkCity(bById(t.b)))||{ic:''}).ic} ${bById(t.b).n}</span><span class="chip ${t.status==='won'?'good':'crit'}">${t.status==='won'?'Menang':'Kalah'}</span></div>`).join('')||'<div class="empty">Belum ada.</div>'}</div>`}
+/* ============ v74: lokasi & chapter pada tender ============ */
+function tndLoc(b){const cid=mkCity(b);const k=kotaById(cid)||KOTA[0];const D=CAMP[cid];let st='free';try{if(campOn()){const c=S.camp.ch[cid];st=c?c.st:'free'}}catch(e){}return {cid,k,bab:D?D.bab:null,st,pts:MK_PTS[b.cls]||1}}
+function tndLocChip(b,t){const L=tndLoc(b),k=L.k;const nm=`${k.ic} <b>${k.n}</b>`;const pv=k.id==='jkt'?'Kota pusat':k.pv;
+  if(L.st==='aktif')return `<div class="tloc act">${nm}<span> · Ch.${L.bab}</span><span class="tlx"> · ${pv}</span> · <b>AKTIF</b><span class="tpt">${t&&t.renew?`pertahankan ${L.pts} poin`:`+${L.pts} poin target`}</span></div>`;
+  if(L.st==='selesai')return `<div class="tloc done">${nm}<span> · Ch.${L.bab}</span><span class="tlx"> · ${pv}</span> · ✓ Tuntas<span class="tpt tlx">omzet & klasemen</span></div>`;
+  return `<div class="tloc">${nm}<span class="tlx"> · ${pv}</span>${L.bab&&campOn()?` · Ch.${L.bab}`:''}</div>`}
+function tndFilt(list){const f=(S.ui&&S.ui.tndF)||'all';if(f==='all')return list;if(f==='act')return list.filter(t=>tndLoc(bById(t.b)).st==='aktif');return list.filter(t=>mkCity(bById(t.b))===f)}
+function tndBar(list){if(list.length<2&&!(S.ui.tndF&&S.ui.tndF!=='all'))return '';const f=S.ui.tndF||'all';const cnt={};let act=0;list.forEach(t=>{const L=tndLoc(bById(t.b));cnt[L.cid]=(cnt[L.cid]||0)+1;if(L.st==='aktif')act++});
+  const ch=(v,l,n)=>`<button class="tfc${f===v?' on':''}" data-act="tndF" data-v="${v}">${l} <b>${n}</b></button>`;
+  const cities=KOTA.filter(k=>cnt[k.id]||f===k.id).map(k=>ch(k.id,k.ic+'<span class="tlx"> '+k.n+'</span>',cnt[k.id]||0)).join('');
+  return `<div class="tfbar">${ch('all','Semua',list.length)}${campOn()?ch('act','📘 Chapter aktif',act):''}${cities}</div>`}
+function tndStrat(b,t){try{const L=tndLoc(b),k=L.k,cid=L.cid;const li=[];
+  const stTx=L.st==='aktif'?'Chapter '+L.bab+' · aktif':L.st==='selesai'?'Chapter '+L.bab+' · tuntas':L.bab&&campOn()?'Chapter '+L.bab:(k.id==='jkt'?'Kota pusat':k.pv);
+  if(mkOn()){const rk=mkRank(cid);if(rk&&rk.pos){const me=rk.t.find(x=>x.r==='me')||{pts:0};
+    if(L.st==='aktif'){const g=campGoal(cid);li.push(`Anda <b>#${g.pos}</b> dari ${g.n} di klasemen ${k.n} (${g.pts} poin) · target ${campNeedTxt(cid)}${g.pos>g.need?` — ${g.need>1?'#'+g.need:'pemimpin'} punya ${g.tgt??0} poin`:' — posisi target sudah tercapai'}`)}
+    else li.push(`Anda <b>#${rk.pos}</b> dari ${rk.n} di klasemen ${k.n} (${me.pts} poin)`);
+    li.push(t.renew?`Tender ulang: kalah berarti <b>−${L.pts} poin</b> (${me.pts} → ${Math.max(0,me.pts-L.pts)})`:`Menang tender ini: <b>+${L.pts} poin</b> (${me.pts} → ${me.pts+L.pts})${L.st==='selesai'?' · chapter sudah tuntas, poin menjaga posisi':''}`)}}
+  const ss=campSites(cid);const mgr=ss.find(s=>{try{return siteMgrOn(s).length}catch(e){return false}});
+  li.push(`Site Anda di kota ini: <b>${ss.length}</b>${ss.length?(mgr?` · supervisor/SM on-site terdekat: ${esc(bById(mgr.b).n)}`:' · belum ada supervisor/SM on-site'):''}`);
+  const nb=nearBase(cid);const br=hasBr(cid);const jam=m=>m<60?m+' menit':'±'+(Math.round(m/30)/2).toString().replace('.',',')+' jam';
+  li.push(cid==='jkt'?'Satu kota dengan kantor pusat':br?`Ada cabang di ${k.n}`:`Jarak dari ${nb.c==='jkt'?'kantor pusat':'cabang '+kotaById(nb.c).n} ${jam(nb.min)} · tanpa cabang`);
+  const risk=!ss.length&&!br&&cid!=='jkt'&&nb.min>=90;
+  return `<div class="sec tstrat"><h3>📍 Posisi strategis</h3><div class="small"><b>${k.ic} ${k.n}</b> <span class="muted">(${stTx})</span></div><ul class="small">${li.map(x=>`<li>${x}</li>`).join('')}</ul>${risk?`<div class="tiny" style="color:var(--warn)">⚠ Kota baru tanpa site & cabang: supervisi jauh, perlu mess/biaya perjalanan, dan kualitas awal rawan turun.</div>`:''}</div>`}catch(e){return ''}}
 function tenderDetail(t){const b=bById(t.b);const g=tenderGate(b,t);const dr=t.draft;if(t.rec.spv==null)Object.assign(t.rec,mgmtRec(b,t.rec));if(dr.spv==null){dr.spv=t.rec.spv||0;dr.msm=t.rec.msm||0}const pr=priceOf(b,t.svc,dr,dr.props,dr.margin,.05);const locked=t.status!=='open';
   const nw_=r=>reqTotal(r)-(r.waste||0);const staffR=nw_(t.rec)?nw_(dr)/nw_(t.rec):1;
   const stepper=(k,l)=>`<div class="spread"><span>${l}${t.survey?` <span class="tiny muted">(survei: ${t.rec[k]})</span>`:''}</span><div class="step"><button data-act="bidStep" data-id="${t.id}" data-k="${k}" data-v="-1" ${locked?'disabled':''}>−</button><b>${dr[k]}</b><button data-act="bidStep" data-id="${t.id}" data-k="${k}" data-v="1" ${locked?'disabled':''}>+</button></div></div>`;
   let res='';if(t.result)res=`<div class="sec"><h3>${t.status==='won'?'Anda menang':'Hasil evaluasi'}</h3><div class="tbl"><table><thead><tr><th>Peserta</th><th class="r">Harga/bln</th><th class="r">Teknis</th><th class="r">Skor</th></tr></thead><tbody>${t.result.map(r=>`<tr><td>${esc(r.n)}${r.note?` <span class="chip crit">${r.note}</span>`:''}</td><td class="r mono">${jt(r.price)}</td><td class="r mono">${r.tech}</td><td class="r mono"><b>${r.score}</b></td></tr>`).join('')}</tbody></table></div>${t.relB!=null?`<div class="tiny">Hubungan dengan klien memberi <b class="mono">${t.relB>=0?'+':''}${t.relB}</b> poin pada skor Anda.</div>`:''}<div class="tiny muted">Bobot harga klien ${t.pers}: ${Math.round(PERS[t.pers].w*100)}%. HPS (perkiraan klien) ${jt(t.hps)}.</div></div>`;
   return `<div class="row"><button class="btn sm" data-act="backTender">← Semua tender</button></div>
-  <div class="sec"><span class="eyebrow">${b.type} · ${b.dist} · ${b.cls}</span><h3 style="font-size:19px">${b.n}</h3>
+  <div class="sec"><span class="eyebrow">${b.type} · ${b.dist} · ${b.cls}</span><h3 style="font-size:19px">${b.n}</h3>${tndLocChip(b,t)}
   <div class="row small"><span>${b.area.toLocaleString('id-ID')} m²</span>${t.svc.map(s=>`<span class="chip">${svcName(s)}</span>`).join('')}${t.svc.includes('waste')?`<span class="chip">${b.ton} ton sampah/hari</span>`:''}</div>
   <div class="small">Pengambil keputusan: <b>${b.bm}</b> · kepribadian <b>${t.pers}</b> — ${PERS[t.pers].d}</div>${t.pl?`<div class="card relcard small"><b>Penunjukan langsung</b>Tanpa kompetitor. Menang bila harga ≤ HPS + 5% (${jt(t.hps*1.05)}). Rekam jejak pekerjaan tambahan +${t.incB} skor teknis.</div>`:t.src==='ooj'?`<div class="card relcard small"><b>Undangan dari calon klien</b>Rekam jejak pekerjaan tambahan +${t.incB} skor teknis.</div>`:''}${oojExpB(b)?`<div class="tiny">Portofolio pekerjaan tambahan di gedung ${b.type.toLowerCase()}: <b>+${oojExpB(b)}</b> skor teknis.</div>`:''}${g?`<div class="chip warn">${g}</div>`:''}</div>
+  ${tndStrat(b,t)}
   ${tenderSched(t)}
   ${res}
   <div class="sec"><h3>1. Persiapan</h3><div class="row"><button class="btn sm" data-act="survey" data-id="${t.id}" ${t.survey||locked?'disabled':''}>${t.survey?'✓ Site survey':'Site survey · Rp150rb'}</button></div>${locked?'':relWidget(t.b,true)}
@@ -3864,7 +3893,7 @@ document.addEventListener('change',e=>{const t=e.target;if(!S)return;
   if(t.dataset.bind==='margin')renderPanel(true)});
 /* ============================ CONFIRMATION ============================ */
 let CONFIRM_OPEN=false;
-const NO_CONFIRM=new Set(['empCard','stokRush','campCopy','ligaC','hhAM','amkHide','amkReset','fieldGo','pinCmp','autoPause','pastToggle','arrAuto','arrFund','fcSet','fcTender','fcAdd','fcOpen','timReset','chEnter','chJoin','chView','chLeave','chCode','logout','finOpen','finFilter','finHelp','toggleRelHelp','makeCode','copyCode','toggleHelp','tab','openTender','backTender','openSite','backSite','layer','bld','readAll','copyRapor','bidStep','bidProp']);
+const NO_CONFIRM=new Set(['tndF','empCard','stokRush','campCopy','ligaC','hhAM','amkHide','amkReset','fieldGo','pinCmp','autoPause','pastToggle','arrAuto','arrFund','fcSet','fcTender','fcAdd','fcOpen','timReset','chEnter','chJoin','chView','chLeave','chCode','logout','finOpen','finFilter','finHelp','toggleRelHelp','makeCode','copyCode','toggleHelp','tab','openTender','backTender','openSite','backSite','layer','bld','readAll','copyRapor','bidStep','bidProp']);
 function request(a,d){if(typeof FIELD!=='undefined')FIELD.ua=performance.now();if(S&&S.over&&!NAV_ACTS.has(a)){toast('Perusahaan sudah pailit. Mulai perusahaan baru dari Dashboard.');return}if(!NAV_ACTS.has(a)&&!syncCan())return;if(!chGuard(a))return;if(NO_CONFIRM.has(a)){act(a,{dataset:d});return}
   if(a==='train'){d.mod=($('#tr_'+d.id)||{}).value;if(!d.mod)return toast('Pilih jenis pelatihan dulu di daftar "Latih…"')}
   if(a==='bulk'&&!d.role){d.n=$('#bulkN').value;d.role=$('#bulkRole').value}
