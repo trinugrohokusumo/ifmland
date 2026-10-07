@@ -345,6 +345,22 @@ body.hc .gl{text-decoration-thickness:2px}
 @media(max-width:600px){.tlx{display:none}}
 .tgh2{display:flex;justify-content:space-between;gap:8px;align-items:baseline;margin:12px 0 4px;padding:5px 10px;border-radius:8px;background:var(--surface-2);font-weight:700;font-size:13px}.tgh2.aktif{background:var(--accent-soft);color:var(--accent)}.tgh2.selesai{color:var(--good)}.tgh2 .tiny{font-weight:500;opacity:.85}
 .chip.cch{font-size:11px}.bsel select{max-width:100%;min-width:0}.bsel{border:1px dashed var(--line);border-radius:10px;padding:8px;margin:6px 0}.bck{width:18px;height:18px;vertical-align:middle;margin-right:6px;accent-color:var(--accent)}
+#tabs.hubmode{display:block;padding:6px 8px 4px}
+.hubrow{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.hub{position:relative;border:1px solid transparent;background:transparent;border-radius:10px;padding:6px 2px;cursor:pointer;color:var(--ink-2);font:inherit;font-weight:700;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:1px;min-height:46px}
+.hub .hubI{font-size:19px;line-height:1.1}.hub.on{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}.hub.lk{opacity:.5}.hub:hover{background:var(--surface-2)}.hub.on:hover{background:var(--accent-soft)}
+.hbd{position:absolute;top:2px;right:calc(50% - 26px);min-width:17px;height:17px;padding:0 4px;border-radius:9px;font:700 10px var(--mono);line-height:17px;color:#fff;background:#D2442F}.hbd.info{background:var(--accent)}.hbd.new{min-width:9px;width:9px;height:9px;padding:0;top:6px;background:#E0A400}
+.subrow{display:flex;gap:6px;flex-wrap:wrap;padding:7px 0 2px}.hubx{display:flex;justify-content:flex-end;margin-top:-2px}
+.stab{flex:none;white-space:nowrap;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:16px;padding:4px 11px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px;min-height:32px}
+.stab.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}.stab.lk{opacity:.55}.stab.gl{border:0;background:transparent;color:var(--ink-2);font-size:11.5px;min-height:24px;padding:2px 6px}
+.sbd{min-width:17px;height:17px;padding:0 4px;border-radius:9px;font:700 10px var(--mono);line-height:17px;color:#fff;background:#D2442F;text-align:center}.sbd.info{background:var(--ink-2)}.stab.on .sbd.info{background:var(--accent-ink);color:var(--accent)}.sbd.new{background:#E0A400;color:#222;font:700 9px inherit;padding:0 5px}
+#bnav .bd.info{background:var(--accent)}body.mob #tabs.hubmode{display:none}.subrow .gl{margin-left:auto}
+body.mob #body>.subrow{position:sticky;top:0;z-index:3;background:var(--surface);padding:4px 0 6px;margin-bottom:4px;flex-wrap:nowrap;overflow-x:auto}
+.tdy.strip{border:1px solid var(--line);border-radius:10px;background:var(--surface-2);padding:6px 8px;margin-bottom:10px}
+.tdyh{display:flex;align-items:center;gap:8px;justify-content:space-between}.tdytg{border:0;background:transparent;color:var(--ink);font:inherit;font-size:13px;cursor:pointer;text-align:left;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:4px 0}
+.tdynx{color:var(--ink-2)}.tdyr{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--line)}.tdyr:first-of-type{border-top:0}.tdyt{flex:1;min-width:0}.tdyr .btn{flex:none}
+.tdyc{flex:none;width:22px;height:22px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-weight:800;font-size:13px;color:#fff}.tdyr.done .tdyc{background:var(--good);border-color:var(--good)}.tdyr.done .tdyt b{text-decoration:line-through;color:var(--ink-2);font-weight:500}.tdyr.crit .tdyc{border-color:var(--crit)}
+.tdy.full{border:2px solid var(--accent-soft)}.tdy.full .bar{margin:4px 0 2px}
 </style>
 
 <div class="app">
@@ -2903,7 +2919,7 @@ function spawnTenders(d){const open=S.tenders.filter(t=>t.status==='open');if(op
 function bankrupt(){mail('Pengadilan Niaga','Perusahaan dinyatakan pailit','Kas negatif lebih dari 30 hari dengan kewajiban tertunggak. Anda bisa memulai perusahaan baru dari menu Perusahaan (Mulai ulang).');S.speed=0}
 
 /* ============================ PLAYER ACTIONS ============================ */
-const NAV_ACTS=new Set(['tndF','klF','empCard','campCopy','ligaC','hhAM','amkHide','amkReset','pinCmp','autoPause','pastToggle','arrAuto','arrFund','fcSet','fcTender','fcAdd','fcOpen','timReset','chEnter','chJoin','chView','chLeave','chCode','logout','finOpen','finFilter','finHelp','toggleRelHelp','makeCode','copyCode','loadCode','toggleHelp','tab','openTender','backTender','openSite','backSite','layer','bld','readAll','copyRapor','reset','resetNo','resetYes']);
+const NAV_ACTS=new Set(['hub','tdyTog','tndF','klF','empCard','campCopy','ligaC','hhAM','amkHide','amkReset','pinCmp','autoPause','pastToggle','arrAuto','arrFund','fcSet','fcTender','fcAdd','fcOpen','timReset','chEnter','chJoin','chView','chLeave','chCode','logout','finOpen','finFilter','finHelp','toggleRelHelp','makeCode','copyCode','loadCode','toggleHelp','tab','openTender','backTender','openSite','backSite','layer','bld','readAll','copyRapor','reset','resetNo','resetYes']);
 function act(a,el){if(typeof FIELD!=='undefined')FIELD.ua=performance.now();const d=el?el.dataset:{};if(!NAV_ACTS.has(a))S.stats.decisions++;
   switch(a){
   case 'arrPay':{const a=arrById(d.id);if(!a){toast('Tunggakan sudah lunas');break}if(d.k==='part'){const n=Math.floor(Math.max(0,S.cash));if(n>0)arrPay(a,n,'manual')}else arrPay(a,arrLeft(a),'manual');break}
@@ -2931,6 +2947,8 @@ function act(a,el){if(typeof FIELD!=='undefined')FIELD.ua=performance.now();cons
   case 'campCopy':try{navigator.clipboard.writeText(campRaporTxt());toast('Laporan disalin')}catch(e){}break;
   case 'tab':if(d.bar&&uxTabLocked(d.v)){toast(uxTabWhy(d.v));break}uxSeen(d.v);S.ui.tab=d.v;if(d.v!=='tender')S.ui.tender=S.ui.tender;break;
   case 'tndF':S.ui.tndF=d.v||'all';break;
+  case 'hub':{const k=hubTarget(d.v);if(!k){const H=hubList().find(x=>x.k===d.v);toast(H?uxTabWhy(H.tabs[0]):'Belum terbuka');break}act('tab',{dataset:{v:k}});break}
+  case 'tdyTog':S.ui.tdyOpen=!S.ui.tdyOpen;break;
   case 'klF':S.ui.klF=d.v||'all';break;
   case 'openTender':{S.ui.tab='tender';S.ui.tender=d.id;const t_=tById(d.id);if(t_)camTo(t_.b);break}
   case 'backTender':S.ui.tender=null;break;
@@ -3626,7 +3644,7 @@ function renderTop(){if(!S)return;try{campBarUpd()}catch(e){}$('#coName').textCo
   html+=cityPills();if(wk&&(dow(d)===6||m<11*60))html+=`<span class="pill"><i></i>${wk}</span>`;
   if($('#hud').innerHTML!==html)$('#hud').innerHTML=html;
   const unread=S.inbox.filter(x=>!x.read).length;const openC=S.sites.reduce((a,s)=>a+s.cmps.filter(c=>!c.done).length,0);const openT=S.tenders.filter(t=>t.status==='open').length;
-  const tabsHtml=TABS.filter(([k])=>(k!=='am'||roleAllowed('am'))&&(k!=='admin'||GATE.isAdmin)).map(([k,n])=>{let b='';if(k==='inbox'){const ic_=inbCounts();b=ic_.need||''}if(k==='profil'&&S.pr&&S.pr.newN)b=S.pr.newN;if(k==='am'&&amPending().length)b=amPending().length;if(k==='site'&&openC)b=openC;if(k==='tender'&&openT)b='';const lk_=uxTabLocked(k);return `<button class="tab ${S.ui.tab===k?'on':''} ${lk_?'lk':''}" data-act="tab" data-v="${k}" data-bar="1" role="tab" aria-label="${esc(n)}" title="${esc(lk_?n+' — '+uxTabWhy(k):n)}"><span class="tabI" aria-hidden="true">${TAB_IC[k]||'•'}</span><span class="tabL">${TAB_SHORT[k]||n}</span>${lk_?'<span class="tlk" aria-hidden="true">🔒</span>':''}${(S.ui.newTabs||[]).includes(k)?'<span class="newdot"></span>':''}${b?`<span class="badge">${b}</span>`:k==='tender'&&openT?`<span class="badge acc">${openT}</span>`:''}</button>`}).join('')+'<button class="tab" data-ux="dict" title="Glossary istilah FM" aria-label="Glossary"><span class="tabI" aria-hidden="true">📖</span><span class="tabL">Glossary</span></button>';if(tabsHtml!==renderTop.last){renderTop.last=tabsHtml;$('#tabs').innerHTML=tabsHtml}}
+  const tabsHtml=TABS.filter(([k])=>(k!=='am'||roleAllowed('am'))&&(k!=='admin'||GATE.isAdmin)).map(([k,n])=>{let b='';if(k==='inbox'){const ic_=inbCounts();b=ic_.need||''}if(k==='profil'&&S.pr&&S.pr.newN)b=S.pr.newN;if(k==='am'&&amPending().length)b=amPending().length;if(k==='site'&&openC)b=openC;if(k==='tender'&&openT)b='';const lk_=uxTabLocked(k);return `<button class="tab ${S.ui.tab===k?'on':''} ${lk_?'lk':''}" data-act="tab" data-v="${k}" data-bar="1" role="tab" aria-label="${esc(n)}" title="${esc(lk_?n+' — '+uxTabWhy(k):n)}"><span class="tabI" aria-hidden="true">${TAB_IC[k]||'•'}</span><span class="tabL">${TAB_SHORT[k]||n}</span>${lk_?'<span class="tlk" aria-hidden="true">🔒</span>':''}${(S.ui.newTabs||[]).includes(k)?'<span class="newdot"></span>':''}${b?`<span class="badge">${b}</span>`:k==='tender'&&openT?`<span class="badge acc">${openT}</span>`:''}</button>`}).join('')+'<button class="tab" data-ux="dict" title="Glossary istilah FM" aria-label="Glossary"><span class="tabI" aria-hidden="true">📖</span><span class="tabL">Glossary</span></button>';{const th=hubOn()?hubTabsHtml():tabsHtml;if(th!==renderTop.last){renderTop.last=th;const te=$('#tabs');te.innerHTML=th;te.classList.toggle('hubmode',hubOn())}}}
 function renderLayers(){const L=S.ui.layers;const n={traffic:'Lalu lintas',transit:'Transportasi umum',people:'Orang',waste:'Sampah',staff:'Tim Anda',rival:'Kompetitor'};$('#layers').innerHTML=`<button class="jwbtn" data-jw="open" title="Peta Pulau Arunika (J)">🗺️ Peta Pulau</button>`+Object.keys(n).map(k=>`<button class="${L[k]?'on':''}" data-act="layer" data-k="${k}">${n[k]}</button>`).join('');const lr=$('#lgRiv');if(lr){lr.style.display=L.rival?'contents':'none';if(L.rival&&mkOn())lr.innerHTML=RIV.filter(x=>mkLive(x.id)).map(x=>`<span><i style="background:${x.col};height:8px;width:8px"></i>${esc(S.mk.r[x.id].sn)}</span>`).join('')+`<span><i style="background:${RIV_LOK.col};height:8px;width:8px"></i>Vendor lokal</span>`}}
 
 /* ============================ UI: PANELS ============================ */
@@ -3634,7 +3652,7 @@ let lastPanel=0,lastPanelHtml='',panelBusyUntil=0;
 function renderPanel(force){if(!S)return;if(!force&&CONFIRM_OPEN)return;const now=performance.now();if(!force&&now-lastPanel<700)return;
   const ae=document.activeElement;if(!force&&ae&&$('#body').contains(ae)&&/INPUT|SELECT|TEXTAREA/.test(ae.tagName))return;if(!force&&now<panelBusyUntil)return;
   lastPanel=now;dirty=false;const f={ringkas:pRingkas,tender:pTender,site:pSite,tim:pTim,hijau:pHijau,uang:pUang,pt:()=>denahHtml()+stokHtml()+ethCard()+pPT(),profil:pProfil,inbox:pInbox,rapor:pRapor,gedung:pGedung,klien:pKlien,am:pAM,challenge:pChallenge,admin:pAdmin,liga:pLiga,kampanye:pKampanye}[S.ui.tab]||pRingkas;
-  const html=f();if(html===lastPanelHtml&&!force){return}lastPanelHtml=html;const sy=$('#body').scrollTop;$('#body').innerHTML=html;try{glWrap($('#body'))}catch(e){console.error(e)}try{applyCollapse()}catch(e){console.error(e)}$('#body').scrollTop=sy;renderTop();drawSparks()}
+  const html=uxWrapPanel(f());if(html===lastPanelHtml&&!force){return}lastPanelHtml=html;const sy=$('#body').scrollTop;$('#body').innerHTML=html;try{glWrap($('#body'))}catch(e){console.error(e)}try{applyCollapse()}catch(e){console.error(e)}$('#body').scrollTop=sy;renderTop();drawSparks()}
 function kpi(l,v,cls){return `<div class="kpi"><span>${l}</span><b class="${cls||''}">${v}</b></div>`}
 function bar(v,cls){return `<div class="bar ${cls||''}"><i style="width:${clamp(v,0,100)}%"></i></div>`}
 function qcls(q){return q>=70?'q':q>=50?'w':'c'}
@@ -3646,7 +3664,7 @@ function pRingkas(){const o=OBJ[S.obj];const act=S.sites.filter(s=>s.status==='a
   const nextPay=(()=>{let d=day();while(dom(d)!==25)d++;return d})();
   const proj=S.cash+S.invoices.filter(i=>!i.paid&&i.due<=nextPay).reduce((a,i)=>a+i.amt+i.ppn-i.pph,0)-pay-arrTotal();
   const avgQ=act.length?Math.round(act.reduce((a,s)=>a+s.q,0)/act.length):null;
-  return `${distCard()}${campMini()}${uxNextCard()}${uxBackupCard()}${uxDigestLine()}${tierChip()}${decCard()}<div class="mentor"><div class="av">PH</div><div class="sec" style="gap:4px"><span class="eyebrow">Pak Harun · mentor · tujuan ${Math.min(S.obj+1,OBJ.length)}/${OBJ.length}</span>${o?`<h3 style="font-size:17px">${o.t}</h3><div class="small">${o.d}</div><div class="small muted">${o.hint}</div>`:'<h3>Fase 0 tuntas</h3><div class="small">Semua tujuan selesai. Lanjutkan membangun portofolio atau uji strategi lain.</div>'}</div></div>
+  return `${distCard()}${campMini()}${hubOn()?tdyCard():uxNextCard()}${uxBackupCard()}${uxDigestLine()}${tierChip()}${hubOn()?'':decCard()}<div class="mentor"><div class="av">PH</div><div class="sec" style="gap:4px"><span class="eyebrow">Pak Harun · mentor · tujuan ${Math.min(S.obj+1,OBJ.length)}/${OBJ.length}</span>${o?`<h3 style="font-size:17px">${o.t}</h3><div class="small">${o.d}</div><div class="small muted">${o.hint}</div>`:'<h3>Fase 0 tuntas</h3><div class="small">Semua tujuan selesai. Lanjutkan membangun portofolio atau uji strategi lain.</div>'}</div></div>
   ${arrSection(1)}${v6DashCard()}<div class="grid2">${kpi('Kas',jt(S.cash),S.cash<0?'neg':'')}${kpi(`Proyeksi kas setelah gajian ${dstr(nextPay,1)}`,jt(proj))}${kpi('Piutang berjalan',jt(recv))}${kpi('Gaji per bulan',jt(pay))}${kpi('Kualitas rata-rata',avgQ==null?'—':avgQ)}${kpi('Komplain terbuka',openC)}</div>
   ${walSummary()}${uxTabLocked('liga')?'':mkMini()}<div class="sec"><div class="spread"><h3>Kas 60 hari terakhir</h3><span class="tiny muted">garis putus = kebutuhan gaji bulanan</span></div><canvas class="spark" id="sparkCash" width="600" height="56"></canvas></div>
   <div class="sec"><h3>Agenda</h3>${agenda()}</div>
@@ -3726,6 +3744,56 @@ function benchAct(a){const ids=benchIds();
 document.addEventListener('change',e=>{const t=e.target;if(!S||!t||!t.dataset)return;
   if(t.dataset.bsel){if(t.checked)BSEL[t.dataset.bsel]=1;else delete BSEL[t.dataset.bsel];const el=document.getElementById('bselN');if(el)el.textContent=benchSelN();return}
   if(t.dataset.bselrole){const r=t.value;if(!r)return;S.emps.filter(x=>!x.siteId&&!isAM(x)&&x.role===r).forEach(x=>BSEL[x.id]=1);renderPanel(true)}},true);
+/* ============ v75: TAMPILAN RINGKAS — 5 kelompok menu, Tugas Hari Ini, notifikasi 3 tingkat ============ */
+function hubOn(){return !!S&&!UXS.full}
+function hubList(){return [
+ {k:'home',n:'Home',ic:'🏠',d:'Ringkasan, surat masuk, dan Campaign',tabs:['ringkas','inbox','kampanye']},
+ {k:'biz',n:'Business',ic:'💼',d:'Tender, klien, dan persaingan',tabs:['tender','klien','liga']},
+ {k:'ops',n:'Operations',ic:'🛠️',d:'Site, tim, Area Manager, sampah',tabs:['site','tim','am','hijau']},
+ {k:'co',n:'Company',ic:'🏛️',d:'Keuangan dan perusahaan',tabs:['uang','pt']},
+ {k:'pro',n:'Progress',ic:'🏆',d:'Level, scorecard, challenge',tabs:['profil','rapor','challenge','admin']}]}
+function hubTabVis(k){return (k!=='am'||roleAllowed('am'))&&(k!=='admin'||GATE.isAdmin)}
+function hubOf(k){if(k==='gedung')return 'biz';const H=hubList().find(h=>h.tabs.includes(k));return H?H.k:'home'}
+var UX_WANT=null;
+function hubTarget(hk){const H=hubList().find(h=>h.k===hk);if(!H)return null;const L=H.tabs.filter(hubTabVis);if(UX_WANT&&S.tut&&S.tut.on&&L.includes(UX_WANT)&&!uxTabLocked(UX_WANT))return UX_WANT;const last=(S.ui.hubLast||{})[hk];if(last&&L.includes(last)&&!uxTabLocked(last))return last;return L.find(k=>!uxTabLocked(k))||null}
+function tabNameS(k){const t=TABS.find(x=>x[0]===k);return t?t[1]:k}
+// notifikasi 3 tingkat: merah = perlu tindakan, biru = info, BARU = fitur baru
+function tabBadge(k){let C={};try{C=uxCounts()}catch(e){}const red={inbox:1,site:1,tim:1,am:1};const n=C[k]||0;if(n)return {n,c:red[k]?'red':'info'};if((S.ui.newTabs||[]).includes(k))return {n:0,c:'new'};return null}
+function hubBadge(H){let r=0,i=0,nw=0;H.tabs.filter(hubTabVis).forEach(k=>{const b=tabBadge(k);if(!b)return;if(b.c==='red')r+=b.n;else if(b.c==='info')i+=b.n;else nw++});return r?{n:r,c:'red'}:i?{n:i,c:'info'}:nw?{n:0,c:'new'}:null}
+function bdgHtml(b,cls){if(!b)return '';if(b.c==='new')return `<span class="${cls} new">${cls==='hbd'?'':'BARU'}</span>`;return `<span class="${cls} ${b.c}">${b.n>99?'99+':b.n}</span>`}
+function hubSubHtml(gl){const hk=hubOf(S.ui.tab);const H=hubList().find(h=>h.k===hk);const L=H.tabs.filter(hubTabVis);if(L.length<2&&!gl)return '';
+  return `<div class="subrow">${L.length<2?'':L.map(k=>{const lk=uxTabLocked(k);return `<button class="stab ${S.ui.tab===k?'on':''} ${lk?'lk':''}" data-act="tab" data-v="${k}" data-bar="1" title="${esc(lk?tabNameS(k)+' — '+uxTabWhy(k):tabNameS(k))}">${lk?'🔒':TAB_IC[k]||'•'} ${tabNameS(k)}${bdgHtml(tabBadge(k),'sbd')}</button>`}).join('')}${gl?'<button class="stab gl" data-ux="dict" title="Glossary istilah FM">📖 Glossary</button>':''}</div>`}
+function hubTabsHtml(){const cur=hubOf(S.ui.tab);
+  return `<div class="hubrow">${hubList().map(H=>{const L=H.tabs.filter(hubTabVis);const lk=L.every(k=>uxTabLocked(k));return `<button class="hub ${cur===H.k?'on':''} ${lk?'lk':''}" data-act="hub" data-v="${H.k}" data-hubof="${L.join(' ')}" title="${esc(H.d)}"><span class="hubI">${lk?'🔒':H.ic}</span><span class="hubL">${H.n}</span>${bdgHtml(hubBadge(H),'hbd')}</button>`}).join('')}</div>${hubSubHtml(1)}`}
+function hubBnav(){const cur=hubOf(S.ui.tab);const h=hubList().map(H=>{const L=H.tabs.filter(hubTabVis);const t=hubTarget(H.k)||L[0];const b=hubBadge(H);const lk=L.every(k=>uxTabLocked(k));
+  return `<button data-nav="${t}" data-hubof="${L.join(' ')}" class="${cur===H.k?'on':''}" aria-label="${H.n}"><i>${lk?'🔒':H.ic}</i>${H.n==='Operations'?'Ops':H.n}${b?(b.c==='new'?'<span class="bd dot"></span>':`<span class="bd ${b.c==='info'?'info':''}">${b.n>99?'99+':b.n}</span>`):''}</button>`}).join('');
+  const el=$('#bnav');if(el.dataset.h!==h){el.dataset.h=h;el.innerHTML=h}}
+// ---- Tugas Hari Ini ----
+function tdyKey(x){if(x.obj)return 'obj:'+S.obj;return x.btn.join('|')}
+function tdyFill(){const F=[];const d=day();
+  if(!uxTabLocked('tender')&&S.tenders.some(t=>t.status==='open'&&!t.bid&&!tenderGate(bById(t.b),t)))F.push({k:'f:tender',t:'Periksa tender terbuka',why:'Pilih tender di kota chapter aktif; perhatikan batas waktunya.',btn:['tab','tender','Buka Tender'],fill:'tab:tender'});
+  if(!uxTabLocked('klien'))F.push({k:'f:meet',t:'Sapa 1 klien atau calon klien',why:'Hubungan baik menambah skor saat tender dan membuat klien bertahan.',btn:['tab','klien','Buka Clients'],fill:'meet',m0:S.stats.meetings||0});
+  if(S.sites.some(s=>s.status==='aktif'))F.push({k:'f:site',t:'Cek kualitas site Anda',why:'Site dengan kualitas di bawah 60 rawan komplain dan surat peringatan.',btn:['tab','site','Buka Sites'],fill:'tab:site'});
+  return F}
+function tdyGet(){if(!S)return null;const d=day();let cur=[];try{cur=uxNext().filter(x=>x.u>0)}catch(e){}const ck={};cur.forEach(x=>{const k=tdyKey(x);if(!ck[k])ck[k]=x});
+  let T=S.tdy;if(!T||T.d!==d){const it=[];Object.keys(ck).slice(0,3).forEach(k=>{const x=ck[k];it.push({k,t:x.t,why:x.why,btn:x.btn,u:x.u,obj:x.obj?S.obj:null})});
+    tdyFill().forEach(f=>{if(it.length<3)it.push(f)});T=S.tdy={d,it,cel:0}}
+  T.it.forEach(x=>{if(x.done)return;if(x.fill){if(x.fill==='meet'&&(S.stats.meetings||0)>x.m0)x.done=1;if(x.fill.startsWith('tab:')&&S.ui.tab===x.fill.slice(4))x.done=1;return}
+    if(x.obj!=null&&x.obj!==undefined&&x.k.startsWith('obj:')){if(S.obj!==x.obj)x.done=1;else{const c=ck[x.k];if(c){x.t=c.t;x.why=c.why;x.btn=c.btn}}return}
+    const c=ck[x.k];if(c){x.t=c.t;x.why=c.why;x.btn=c.btn}else x.done=1});
+  Object.keys(ck).forEach(k=>{const c=ck[k];if(c.u>=80&&T.it.length<6&&!T.it.some(x=>x.k===k))T.it.push({k,t:c.t,why:c.why,btn:c.btn,u:c.u,late:1})});
+  if(T.it.length&&T.it.every(x=>x.done)&&!T.cel){T.cel=1;setTimeout(()=>{try{toast('✅ Semua tugas hari ini selesai. Kerja bagus!')}catch(e){}},0)}
+  return T}
+function tdyBtn(x,cls){const b=x.btn;return `<button class="btn sm ${cls||''}" data-act="${b[0]}" ${b[0]==='tab'?`data-v="${b[1]}"`:`data-id="${b[1]}"`}>${b[2]}</button>`}
+function tdyRows(T){return T.it.map(x=>`<div class="tdyr ${x.done?'done':''} ${x.u>=85&&!x.done?'crit':''}"><span class="tdyc">${x.done?'✓':''}</span><span class="tdyt"><b>${x.t}</b>${x.done?'':`<div class="tiny muted">${esc(x.why||'')}</div>`}</span>${x.done?'':tdyBtn(x,x===T.it.find(y=>!y.done)?'pri':'')}</div>`).join('')}
+function tdyCard(){if(!S||S.over||(S.tut&&S.tut.on))return uxNextCard();const T=tdyGet();if(!T||!T.it.length)return '';const dn=T.it.filter(x=>x.done).length;
+  return `<div class="card tdy full"><div class="spread"><b>📋 Tugas hari ini</b><span class="tiny mono">${dn}/${T.it.length} selesai</span></div>${bar(dn/T.it.length*100,'q')}${tdyRows(T)}
+   <div class="row tiny" style="justify-content:space-between;gap:6px"><span class="muted">Daftar dibuat tiap pagi dari hal paling mendesak. Selesai = tercentang otomatis.</span><button class="btn sm" data-act="autoPause" title="Jeda otomatis saat krisis">${S.ui.autoPause===false?'Jeda otomatis: mati':'⏸ Jeda otomatis saat krisis'}</button></div></div>`}
+function tdyStrip(){if(!S||S.over||(S.tut&&S.tut.on))return '';const T=tdyGet();if(!T||!T.it.length)return '';const dn=T.it.filter(x=>x.done).length;const nx=T.it.find(x=>!x.done);const op=!!S.ui.tdyOpen;
+  return `<div class="tdy strip ${op?'open':''}"><div class="tdyh"><button class="tdytg" data-act="tdyTog" aria-expanded="${op}">${op?'▾':'▸'} 📋 <b>Tugas hari ini</b> <span class="mono">${dn}/${T.it.length}</span>${nx?` <span class="tdynx">· ${nx.t}</span>`:' · ✅ semua selesai'}</button>${nx&&!op?tdyBtn(nx,'pri'):''}</div>${op?tdyRows(T):''}</div>`}
+function uxWrapPanel(html){if(!hubOn())return html;try{S.ui.hubLast=S.ui.hubLast||{};if(S.ui.tab!=='gedung')S.ui.hubLast[hubOf(S.ui.tab)]=S.ui.tab;
+  if(!UXS.hubSeen){UXS.hubSeen=1;try{uxsSave()}catch(e){}setTimeout(()=>{try{toast('Tampilan baru: menu dikelompokkan jadi 5 + Tugas Hari Ini. Ingin tampilan lama? ⚙ → Tampilan Lengkap')}catch(e){}},400)}
+  const mob=document.body.classList.contains('mob');return (mob?hubSubHtml():'')+(S.ui.tab==='ringkas'?'':tdyStrip())+html}catch(e){reportErr('tampilan ringkas',e);return html}}
 function tenderDetail(t){const b=bById(t.b);const g=tenderGate(b,t);const dr=t.draft;if(t.rec.spv==null)Object.assign(t.rec,mgmtRec(b,t.rec));if(dr.spv==null){dr.spv=t.rec.spv||0;dr.msm=t.rec.msm||0}const pr=priceOf(b,t.svc,dr,dr.props,dr.margin,.05);const locked=t.status!=='open';
   const nw_=r=>reqTotal(r)-(r.waste||0);const staffR=nw_(t.rec)?nw_(dr)/nw_(t.rec):1;
   const stepper=(k,l)=>`<div class="spread"><span>${l}${t.survey?` <span class="tiny muted">(survei: ${t.rec[k]})</span>`:''}</span><div class="step"><button data-act="bidStep" data-id="${t.id}" data-k="${k}" data-v="-1" ${locked?'disabled':''}>−</button><b>${dr[k]}</b><button data-act="bidStep" data-id="${t.id}" data-k="${k}" data-v="1" ${locked?'disabled':''}>+</button></div></div>`;
@@ -3933,7 +4001,7 @@ document.addEventListener('change',e=>{const t=e.target;if(!S)return;
   if(t.dataset.bind==='margin')renderPanel(true)});
 /* ============================ CONFIRMATION ============================ */
 let CONFIRM_OPEN=false;
-const NO_CONFIRM=new Set(['tndF','klF','empCard','stokRush','campCopy','ligaC','hhAM','amkHide','amkReset','fieldGo','pinCmp','autoPause','pastToggle','arrAuto','arrFund','fcSet','fcTender','fcAdd','fcOpen','timReset','chEnter','chJoin','chView','chLeave','chCode','logout','finOpen','finFilter','finHelp','toggleRelHelp','makeCode','copyCode','toggleHelp','tab','openTender','backTender','openSite','backSite','layer','bld','readAll','copyRapor','bidStep','bidProp']);
+const NO_CONFIRM=new Set(['hub','tdyTog','tndF','klF','empCard','stokRush','campCopy','ligaC','hhAM','amkHide','amkReset','fieldGo','pinCmp','autoPause','pastToggle','arrAuto','arrFund','fcSet','fcTender','fcAdd','fcOpen','timReset','chEnter','chJoin','chView','chLeave','chCode','logout','finOpen','finFilter','finHelp','toggleRelHelp','makeCode','copyCode','toggleHelp','tab','openTender','backTender','openSite','backSite','layer','bld','readAll','copyRapor','bidStep','bidProp']);
 function request(a,d){if(typeof FIELD!=='undefined')FIELD.ua=performance.now();if(S&&S.over&&!NAV_ACTS.has(a)){toast('Perusahaan sudah pailit. Mulai perusahaan baru dari Dashboard.');return}if(!NAV_ACTS.has(a)&&!syncCan())return;if(!chGuard(a))return;if(NO_CONFIRM.has(a)){act(a,{dataset:d});return}
   if(a==='train'){d.mod=($('#tr_'+d.id)||{}).value;if(!d.mod)return toast('Pilih jenis pelatihan dulu di daftar "Latih…"')}
   if(a==='bulk'&&!d.role){d.n=$('#bulkN').value;d.role=$('#bulkRole').value}
@@ -5068,7 +5136,7 @@ function uxPopOpen(){const el=$('#uxPop');if(el.classList.contains('on')){el.cla
 /* ---------- Tutorial ---------- */
 function uxTutT(){const ok=t=>t.status==='open'&&!t.bid&&!tenderGate(bById(t.b),t);return S.tenders.find(t=>ok(t)&&bById(t.b).type&&/klinik/i.test(bById(t.b).type+' '+bById(t.b).n))||S.tenders.find(ok)}
 function uxVis(el){if(!el)return null;const r=el.getBoundingClientRect();if(r.width<2||r.height<2)return null;return el}
-function uxTabEl(k){return uxVis(document.querySelector(`#bnav [data-nav="${k}"]`))||uxVis(document.querySelector(`#tabs [data-v="${k}"]`))}
+function uxTabEl(k){const ex=uxVis(document.querySelector(`#tabs [data-v="${k}"]`))||uxVis(document.querySelector(`#body .subrow [data-v="${k}"]`))||uxVis(document.querySelector(`#bnav [data-nav="${k}"]`));if(ex)return ex;UX_WANT=k;if(hubOn()){try{const b=$('#bnav');if(b)b.dataset.h=''}catch(e){}}return uxVis(document.querySelector(`#tabs [data-hubof~="${k}"]`))||uxVis(document.querySelector(`#bnav [data-hubof~="${k}"]`))}
 function uxTenderPath(sel){if(S.ui.tab!=='tender')return uxTabEl('tender');if(!S.ui.tender){const t=uxTutT();return uxVis(t&&document.querySelector(`#body [data-act="openTender"][data-id="${t.id}"]`))||uxVis(document.querySelector('#body [data-act="openTender"]'))}return uxVis(document.querySelector(sel))}
 function uxNeedRole(){const c=S.emps.filter(e=>e.role==='cleaner').length,l=S.emps.filter(e=>e.role==='leader').length;return c<3?'cleaner':l<1?'leader':null}
 const TUT=[
@@ -5112,7 +5180,7 @@ const UX_ICON={klien:'🤝',am:'🧭',hijau:'♻️',uang:'💰',pt:'🏛️',pr
 function uxCounts(){const unread=inbCounts().need;const openC=S.sites.reduce((a,s)=>a+s.cmps.filter(c=>!c.done).length,0);const openT=S.tenders.filter(t=>t.status==='open'&&!t.bid&&!tenderGate(bById(t.b),t)).length;
   let gaps=0;try{gaps=S.sites.filter(s=>s.status==='aktif').reduce((a,s)=>a+GAP_ROLES().reduce((b,r)=>b+siteShort(s,r),0),0)}catch(e){}
   const amP=(typeof amPending==='function'&&roleAllowed('am'))?amPending().length:0;return {inbox:unread,site:openC,tender:openT,tim:gaps,am:amP,profil:(S.pr&&S.pr.newN)||0}}
-function uxNav(){if(!S)return;const C=uxCounts();const nw=new Set(S.ui.newTabs||[]);const inNav=new Set(UX_NAV.map(x=>x[0]));const cur=S.ui.tab==='gedung'?'ringkas':S.ui.tab;
+function uxNav(){if(!S)return;if(hubOn()){hubBnav();return}const C=uxCounts();const nw=new Set(S.ui.newTabs||[]);const inNav=new Set(UX_NAV.map(x=>x[0]));const cur=S.ui.tab==='gedung'?'ringkas':S.ui.tab;
   const more=Object.keys(UX_ICON).filter(k=>(k!=='am'||roleAllowed('am'))&&(k!=='admin'||GATE.isAdmin)).reduce((a,k)=>a+(C[k]||0),0);const moreNew=[...nw].some(k=>!inNav.has(k));
   const h=UX_NAV.map(([k,i,n])=>`<button data-nav="${k}" class="${cur===k?'on':''}" aria-label="${n}"><i>${i}</i>${n}${C[k]?`<span class="bd">${C[k]>99?'99+':C[k]}</span>`:''}</button>`).join('')+
     `<button data-ux="more" class="${!inNav.has(cur)?'on':''}" aria-label="Menu lainnya"><i>☰</i>More${more?`<span class="bd">${more>99?'99+':more}</span>`:moreNew?'<span class="bd dot"></span>':''}</button>`;
@@ -5349,6 +5417,7 @@ function uxSetOpen(){$('#uxPop').classList.remove('on');$('#uxMore').classList.r
   const tg=(k,on,dis)=>`<button class="tgl ${on?'on':''}" data-ux="set" data-v="${k}" role="switch" aria-checked="${on}" ${dis?'disabled':''}><i></i></button>`;
   const seg=(k,opts,cur)=>`<div class="seg">${opts.map(([v,n])=>`<button class="${cur===v?'on':''}" data-ux="set" data-v="${k}:${v}">${n}</button>`).join('')}</div>`;
   $('#uxSet').innerHTML=`<div class="box"><div class="spread"><h3 style="font-size:19px">⚙ Pengaturan</h3><button class="btn sm" data-ux="setx">✕ Tutup</button></div>
+   <div class="setrow"><span><b>Tampilan Lengkap</b><div class="tiny muted">Hidup = semua 15 tab sejajar dan panel "Keputusan hari ini" seperti versi sebelumnya (untuk pemain berpengalaman). Mati = tampilan ringkas: 5 kelompok menu + Tugas Hari Ini.</div></span>${tg('full',!!UXS.full)}</div>
    <div class="setrow"><span><b>Bimbingan harian</b><div class="tiny muted">Waktu berjalan lebih lambat (0,6×) dan Pak Harun memberi saran setiap pagi. Aturan permainan tetap sama.${S.ch?' Tidak tersedia di challenge.':''}</div></span>${tg('easy',uxEasy(),!!S.ch)}</div>
    <div class="setrow"><span><b>Ukuran teks</b><div class="tiny muted">Untuk panel, jendela, dan notifikasi.</div></span>${seg('ts',[['s','<span style="font-size:12px">A</span>'],['m','<span style="font-size:15px">A</span>'],['l','<span style="font-size:19px">A</span>']],UXS.ts)}</div>
    <div class="setrow"><span><b>Kontras tinggi</b><div class="tiny muted">Garis & teks lebih tegas; status selalu disertai ikon ✓ ⚠ ✕.</div></span>${tg('hc',!!UXS.hc)}</div>
@@ -5359,7 +5428,7 @@ function uxSetOpen(){$('#uxPop').classList.remove('on');$('#uxMore').classList.r
    <div class="setrow"><span><b>Tombol 💡 "Apa yang harus saya lakukan?"</b><div class="tiny muted">Seret tombolnya untuk memindahkan; dilepas akan menempel ke tepi kiri/kanan. Posisi diingat terpisah untuk HP dan PC.</div></span><span class="row" style="gap:6px;flex:none">${document.body.classList.contains('mob')?'':`<button class="btn sm" data-ux="set" data-v="fabMini">${UXS.fabMini?'Ikon saja':'Dengan teks'}</button>`}<button class="btn sm" data-ux="fabreset">Kembalikan posisi</button></span></div>
    <div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm" data-ux="tut">🎓 ${S.tut&&S.tut.done?'Ulangi tutorial':'Mulai tutorial'}</button><button class="btn sm" data-ux="dict">📖 Glossary FM</button><button class="btn sm pckey" data-ux="keys">⌨️ Pintasan keyboard</button>${S.ui.ds?'<button class="btn sm" data-ux="dayshow">🌙 Ringkasan hari ini</button>':''}</div></div>`;
   $('#uxSet').classList.add('on')}
-function uxSetDo(v){if(v==='easy'){if(S.ch)return;S.set=S.set||{};S.set.easy=!S.set.easy;toast(S.set.easy?'Bimbingan harian aktif':'Bimbingan harian dimatikan');save()}
+function uxSetDo(v){if(v==='full'){UXS.full=!UXS.full;uxsSave();renderTop.last='';lastPanelHtml='';try{$('#bnav').dataset.h=''}catch(e){}renderTop();uxNav();renderPanel(true);toast(UXS.full?'Tampilan Lengkap aktif':'Tampilan ringkas aktif');uxSetOpen();return}if(v==='easy'){if(S.ch)return;S.set=S.set||{};S.set.easy=!S.set.easy;toast(S.set.easy?'Bimbingan harian aktif':'Bimbingan harian dimatikan');save()}
   else if(v==='hc'){UXS.hc=!UXS.hc;uxsSave()}else if(v==='fabMini'){UXS.fabMini=!UXS.fabMini;uxsSave();fabApply()}else if(v==='daily'){UXS.daily=!UXS.daily;uxsSave()}
   else if(v==='toastAll'){S.ui.toastAll=!S.ui.toastAll}else if(v==='gl'){S.ui.glOff=!S.ui.glOff;lastPanelHtml='';renderPanel(true)}
   else if(v.startsWith('ts:')){UXS.ts=v.slice(3);uxsSave()}else if(v.startsWith('gfx:'))uxSetGfx(v.slice(4));
