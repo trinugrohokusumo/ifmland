@@ -361,6 +361,8 @@ body.mob #body>.subrow{position:sticky;top:0;z-index:3;background:var(--surface)
 .tdynx{color:var(--ink-2)}.tdyr{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--line)}.tdyr:first-of-type{border-top:0}.tdyt{flex:1;min-width:0}.tdyr .btn{flex:none}
 .tdyc{flex:none;width:22px;height:22px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-weight:800;font-size:13px;color:#fff}.tdyr.done .tdyc{background:var(--good);border-color:var(--good)}.tdyr.done .tdyt b{text-decoration:line-through;color:var(--ink-2);font-weight:500}.tdyr.crit .tdyc{border-color:var(--crit)}
 .tdy.full{border:2px solid var(--accent-soft)}.tdy.full .bar{margin:4px 0 2px}
+.sopc{gap:6px}.sopc.on{border-color:var(--good);box-shadow:inset 3px 0 0 var(--good)}.sopc.lk{opacity:.7}.sopwhy{background:var(--surface-2);border-radius:8px;padding:5px 8px;color:var(--ink-2)}
+.awayl{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
 </style>
 
 <div class="app">
@@ -2949,6 +2951,7 @@ function act(a,el){if(typeof FIELD!=='undefined')FIELD.ua=performance.now();cons
   case 'tndF':S.ui.tndF=d.v||'all';break;
   case 'hub':{const k=hubTarget(d.v);if(!k){const H=hubList().find(x=>x.k===d.v);toast(H?uxTabWhy(H.tabs[0]):'Belum terbuka');break}act('tab',{dataset:{v:k}});break}
   case 'tdyTog':S.ui.tdyOpen=!S.ui.tdyOpen;break;
+  case 'sopT':{const D=sopDefs().find(x=>x.k===d.k);if(!D)break;const lk=D.lock();if(lk){toast(lk);break}if(D.pol){S.co.policy[D.pol]=!S.co.policy[D.pol];toast(`SOP ${D.n}: ${S.co.policy[D.pol]?'aktif':'mati'}`);break}const P=sopS();P.on[d.k]=!P.on[d.k];toast(`SOP ${D.n}: ${P.on[d.k]?'aktif':'mati'}`);break}
   case 'klF':S.ui.klF=d.v||'all';break;
   case 'openTender':{S.ui.tab='tender';S.ui.tender=d.id;const t_=tById(d.id);if(t_)camTo(t_.b);break}
   case 'backTender':S.ui.tender=null;break;
@@ -3598,7 +3601,7 @@ const OBJ=[
  {t:'Rekrut tim inti',d:'Minimal 3 cleaner dan 1 leader.',hint:'Buka tab Team → Kandidat. Wawancara dulu agar sifat tersembunyi terungkap.',ok:()=>S.emps.filter(e=>e.role==='cleaner').length>=3&&S.emps.some(e=>e.role==='leader')},
  {t:'Ajukan penawaran pertama',d:'Pilih tender, lakukan site survey, hitung biaya.',hint:'Klinik dan sekolah cocok untuk kontrak pertama. Margin sehat 12–20%.',ok:()=>S.tenders.some(t=>t.bid)},
  {t:'Menangkan kontrak pertama',d:'Tunggu pengumuman pukul 10.00 di hari batas.',hint:'Kalah? Bandingkan skor harga dan teknis pemenang di tab Tender.',ok:()=>S.sites.length>0},
- {t:'Tutup 5 komplain tepat SLA',d:'Komplain berat 45 menit, ringan 90 menit.',hint:'Aktifkan kebijakan "Leader tangani komplain ringan" di tab Company agar tidak micromanage.',ok:()=>S.stats.onTime>=5},
+ {t:'Tutup 5 komplain tepat SLA',d:'Komplain berat 45 menit, ringan 90 menit.',hint:'Aktifkan SOP "Leader tangani komplain ringan" di tab SOP (Operations) agar tidak micromanage.',ok:()=>S.stats.onTime>=5},
  {t:'Gajian pertama tepat waktu',d:'Tanggal 25, kas harus cukup.',hint:'Klien membayar 30–45 hari setelah BAST. Perhatikan proyeksi kas di tab Finance.',ok:()=>S.stats.payrollOn>=1},
  {t:'Pengalihan sampah 30%',d:'Jalankan layanan waste dan kurangi sampah ke Bukit Lestari.',hint:'Latih petugas sampah "Pemilahan", tambahkan program pemilahan & bank sampah di site.',ok:()=>S.sites.some(s=>s.svc.includes('waste')&&s.status==='aktif')&&(S.divToday||0)>=.3},
  {t:'Naik kelas: PT & kontrak menengah',d:'Dirikan PT, pindah ke ruko, menangkan tender kelas menengah.',hint:'Tab Perusahaan → Legalitas & Kantor.',ok:()=>S.co.legal==='PT'&&S.sites.some(s=>bById(s.b).cls==='menengah'&&s.status!=='putus')},
@@ -3622,8 +3625,8 @@ function competency(){const st=S.stats;const act=S.sites.filter(s=>s.status==='a
 function raporText(){const c=competency();return `Scorecard Manajer IFM Land — ${S.co.name}\n${dstr(day())}\nDepartemen asal: ${DEPTS[S.co.dept].n}\n`+c.map(x=>`${x.k}: ${x.v==null?'belum ada data':x.v+'/100'}`).join('\n')+`\nKontrak aktif: ${S.sites.filter(s=>s.status==='aktif').length}\nKas: ${jt(S.cash)} · Reputasi ${Math.round(S.rep)}/100 · Skor Hijau ${S.green}\nKeputusan diambil: ${S.stats.decisions}`}
 
 /* ============================ UI: TOP & TABS ============================ */
-const TAB_IC={ringkas:'📊',kampanye:'📘',tender:'📄',site:'🏢',klien:'🤝',liga:'🏆',tim:'👥',am:'🧭',hijau:'♻️',uang:'💰',pt:'🏛️',profil:'👤',inbox:'✉️',rapor:'📋',challenge:'⚔️',admin:'🛠️'},TAB_SHORT={liga:'Ranking',am:'Area Mgr',hijau:'Green',rapor:'Score',ringkas:'Dashboard'};
-const TABS=[['ringkas','Dashboard'],['kampanye','Campaign'],['tender','Tender'],['site','Sites'],['klien','Clients'],['liga','Leaderboard'],['tim','Team'],['am','Area Manager'],['hijau','Green & Waste'],['uang','Finance'],['pt','Company'],['profil','Profile'],['inbox','Inbox'],['rapor','Scorecard'],['challenge','Challenge'],['admin','Admin']];
+const TAB_IC={ringkas:'📊',kampanye:'📘',tender:'📄',site:'🏢',klien:'🤝',liga:'🏆',tim:'👥',sop:'📜',am:'🧭',hijau:'♻️',uang:'💰',pt:'🏛️',profil:'👤',inbox:'✉️',rapor:'📋',challenge:'⚔️',admin:'🛠️'},TAB_SHORT={liga:'Ranking',am:'Area Mgr',hijau:'Green',rapor:'Score',ringkas:'Dashboard'};
+const TABS=[['ringkas','Dashboard'],['kampanye','Campaign'],['tender','Tender'],['site','Sites'],['klien','Clients'],['liga','Leaderboard'],['tim','Team'],['sop','SOP'],['am','Area Manager'],['hijau','Green & Waste'],['uang','Finance'],['pt','Company'],['profil','Profile'],['inbox','Inbox'],['rapor','Scorecard'],['challenge','Challenge'],['admin','Admin']];
 function renderTop(){if(!S)return;try{campBarUpd()}catch(e){}$('#coName').textContent=S.ch?`${S.co.name} · Challenge: ${S.ch.name}`:`${S.co.name} · Mahkota Raya${SYNC.on?' · tersinkron':''}`;const d=day();$('#clkD').textContent=dstr(d);$('#clkT').textContent=hm(S.t);
   const c=$('#stCash');c.textContent=jt(S.cash);c.classList.toggle('neg',S.cash<0);$('#stRep').textContent=Math.round(S.rep);$('#stGreen').textContent=S.green;
   $('#stSites').textContent=S.sites.filter(s=>s.status==='aktif'||s.status==='mobilisasi').length;$('#stEmp').textContent=S.emps.length;
@@ -3651,7 +3654,7 @@ function renderLayers(){const L=S.ui.layers;const n={traffic:'Lalu lintas',trans
 let lastPanel=0,lastPanelHtml='',panelBusyUntil=0;
 function renderPanel(force){if(!S)return;if(!force&&CONFIRM_OPEN)return;const now=performance.now();if(!force&&now-lastPanel<700)return;
   const ae=document.activeElement;if(!force&&ae&&$('#body').contains(ae)&&/INPUT|SELECT|TEXTAREA/.test(ae.tagName))return;if(!force&&now<panelBusyUntil)return;
-  lastPanel=now;dirty=false;const f={ringkas:pRingkas,tender:pTender,site:pSite,tim:pTim,hijau:pHijau,uang:pUang,pt:()=>denahHtml()+stokHtml()+ethCard()+pPT(),profil:pProfil,inbox:pInbox,rapor:pRapor,gedung:pGedung,klien:pKlien,am:pAM,challenge:pChallenge,admin:pAdmin,liga:pLiga,kampanye:pKampanye}[S.ui.tab]||pRingkas;
+  lastPanel=now;dirty=false;const f={ringkas:pRingkas,tender:pTender,site:pSite,tim:pTim,hijau:pHijau,uang:pUang,pt:()=>denahHtml()+stokHtml()+ethCard()+pPT(),profil:pProfil,inbox:pInbox,rapor:pRapor,gedung:pGedung,klien:pKlien,am:pAM,challenge:pChallenge,admin:pAdmin,liga:pLiga,kampanye:pKampanye,sop:pSop}[S.ui.tab]||pRingkas;
   const html=uxWrapPanel(f());if(html===lastPanelHtml&&!force){return}lastPanelHtml=html;const sy=$('#body').scrollTop;$('#body').innerHTML=html;try{glWrap($('#body'))}catch(e){console.error(e)}try{applyCollapse()}catch(e){console.error(e)}$('#body').scrollTop=sy;renderTop();drawSparks()}
 function kpi(l,v,cls){return `<div class="kpi"><span>${l}</span><b class="${cls||''}">${v}</b></div>`}
 function bar(v,cls){return `<div class="bar ${cls||''}"><i style="width:${clamp(v,0,100)}%"></i></div>`}
@@ -3749,7 +3752,7 @@ function hubOn(){return !!S&&!UXS.full}
 function hubList(){return [
  {k:'home',n:'Home',ic:'🏠',d:'Ringkasan, surat masuk, dan Campaign',tabs:['ringkas','inbox','kampanye']},
  {k:'biz',n:'Business',ic:'💼',d:'Tender, klien, dan persaingan',tabs:['tender','klien','liga']},
- {k:'ops',n:'Operations',ic:'🛠️',d:'Site, tim, Area Manager, sampah',tabs:['site','tim','am','hijau']},
+ {k:'ops',n:'Operations',ic:'🛠️',d:'Site, tim, SOP otomatis, Area Manager, sampah',tabs:['site','tim','sop','am','hijau']},
  {k:'co',n:'Company',ic:'🏛️',d:'Keuangan dan perusahaan',tabs:['uang','pt']},
  {k:'pro',n:'Progress',ic:'🏆',d:'Level, scorecard, challenge',tabs:['profil','rapor','challenge','admin']}]}
 function hubTabVis(k){return (k!=='am'||roleAllowed('am'))&&(k!=='admin'||GATE.isAdmin)}
@@ -3771,6 +3774,7 @@ function hubBnav(){const cur=hubOf(S.ui.tab);const h=hubList().map(H=>{const L=H
 // ---- Tugas Hari Ini ----
 function tdyKey(x){if(x.obj)return 'obj:'+S.obj;return x.btn.join('|')}
 function tdyFill(){const F=[];const d=day();
+  try{if(S.sites.some(s=>s.status==='aktif')&&!sopDefs().some(x=>!x.lock()&&sopIsOn(x)))F.push({k:'f:sop',t:'Aktifkan satu SOP',why:'Biarkan tim mengerjakan hal rutin secara otomatis, misalnya Leader menangani komplain ringan.',btn:['tab','sop','Buka SOP'],fill:'sop'})}catch(e){}
   if(!uxTabLocked('tender')&&S.tenders.some(t=>t.status==='open'&&!t.bid&&!tenderGate(bById(t.b),t)))F.push({k:'f:tender',t:'Periksa tender terbuka',why:'Pilih tender di kota chapter aktif; perhatikan batas waktunya.',btn:['tab','tender','Buka Tender'],fill:'tab:tender'});
   if(!uxTabLocked('klien'))F.push({k:'f:meet',t:'Sapa 1 klien atau calon klien',why:'Hubungan baik menambah skor saat tender dan membuat klien bertahan.',btn:['tab','klien','Buka Clients'],fill:'meet',m0:S.stats.meetings||0});
   if(S.sites.some(s=>s.status==='aktif'))F.push({k:'f:site',t:'Cek kualitas site Anda',why:'Site dengan kualitas di bawah 60 rawan komplain dan surat peringatan.',btn:['tab','site','Buka Sites'],fill:'tab:site'});
@@ -3778,7 +3782,7 @@ function tdyFill(){const F=[];const d=day();
 function tdyGet(){if(!S)return null;const d=day();let cur=[];try{cur=uxNext().filter(x=>x.u>0)}catch(e){}const ck={};cur.forEach(x=>{const k=tdyKey(x);if(!ck[k])ck[k]=x});
   let T=S.tdy;if(!T||T.d!==d){const it=[];Object.keys(ck).slice(0,3).forEach(k=>{const x=ck[k];it.push({k,t:x.t,why:x.why,btn:x.btn,u:x.u,obj:x.obj?S.obj:null})});
     tdyFill().forEach(f=>{if(it.length<3)it.push(f)});T=S.tdy={d,it,cel:0}}
-  T.it.forEach(x=>{if(x.done)return;if(x.fill){if(x.fill==='meet'&&(S.stats.meetings||0)>x.m0)x.done=1;if(x.fill.startsWith('tab:')&&S.ui.tab===x.fill.slice(4))x.done=1;return}
+  T.it.forEach(x=>{if(x.done)return;if(x.fill){if(x.fill==='meet'&&(S.stats.meetings||0)>x.m0)x.done=1;if(x.fill.startsWith('tab:')&&S.ui.tab===x.fill.slice(4))x.done=1;if(x.fill==='sop'&&sopDefs().some(y=>!y.lock()&&sopIsOn(y)))x.done=1;return}
     if(x.obj!=null&&x.obj!==undefined&&x.k.startsWith('obj:')){if(S.obj!==x.obj)x.done=1;else{const c=ck[x.k];if(c){x.t=c.t;x.why=c.why;x.btn=c.btn}}return}
     const c=ck[x.k];if(c){x.t=c.t;x.why=c.why;x.btn=c.btn}else x.done=1});
   Object.keys(ck).forEach(k=>{const c=ck[k];if(c.u>=80&&T.it.length<6&&!T.it.some(x=>x.k===k))T.it.push({k,t:c.t,why:c.why,btn:c.btn,u:c.u,late:1})});
@@ -3794,6 +3798,54 @@ function tdyStrip(){if(!S||S.over||(S.tut&&S.tut.on))return '';const T=tdyGet();
 function uxWrapPanel(html){if(!hubOn())return html;try{S.ui.hubLast=S.ui.hubLast||{};if(S.ui.tab!=='gedung')S.ui.hubLast[hubOf(S.ui.tab)]=S.ui.tab;
   if(!UXS.hubSeen){UXS.hubSeen=1;try{uxsSave()}catch(e){}setTimeout(()=>{try{toast('Tampilan baru: menu dikelompokkan jadi 5 + Tugas Hari Ini. Ingin tampilan lama? ⚙ → Tampilan Lengkap')}catch(e){}},400)}
   const mob=document.body.classList.contains('mob');return (mob?hubSubHtml():'')+(S.ui.tab==='ringkas'?'':tdyStrip())+html}catch(e){reportErr('tampilan ringkas',e);return html}}
+/* ============ v76: SOP & OTOMASI + ringkasan "Selama Anda pergi" ============ */
+function sopS(){S.sop=S.sop||{on:{},p:{},log:[]};const P=S.sop;P.on=P.on||{};P.p=Object.assign({visit:1,k3:2,retain:40,reviewQ:70},P.p||{});P.log=P.log||[];return P}
+function sopDefs(){const emp=S.emps.length;const kl=uxTabLocked('klien');return [
+ {k:'leader',pol:'autoLeader',ic:'🧹',n:'Leader tangani komplain ringan',d:'Komplain ringan ditangani leader site dalam 20–40 menit bila leader hadir.',why:'Delegasi berjenjang: masalah kecil selesai di level terdekat, manajer fokus ke masalah besar.',cost:'Tanpa biaya',lock:()=>null},
+ {k:'reliever',pol:'reliever',ic:'🔁',n:'Isi pos kosong dengan reliever',d:'Bila ada pos kosong (absen/sakit), reliever lembur menggantikan.',why:'Pos kosong = tagihan dipotong & temuan audit. Reliever lebih murah dari denda kontrak.',cost:'Rp160 rb/orang/shift',lock:()=>null},
+ {k:'bench',ic:'🪑',n:'Tempatkan karyawan standby tiap pagi',d:'Setiap pagi, karyawan standby otomatis ditempatkan ke site yang kekurangan perannya.',why:'Karyawan menganggur tetap digaji; manpower planning yang baik memakai cadangan lebih dulu sebelum merekrut.',cost:'Tanpa biaya',lock:()=>null,note:()=>hrOn()?'Fungsi HR aktif: penempatan standby sudah dijalankan HR setiap pagi.':''},
+ {k:'visit',ic:'🤝',n:'Kunjungan rutin klien',d:'Klien aktif yang belum disapa ≥12 hari dikunjungi otomatis (klien yang dipegang Area Manager dilewati).',why:'Hubungan klien turun bila dibiarkan >14 hari. Account management yang terjadwal mencegah klien pindah saat tender ulang.',cost:'Rp150 rb/kunjungan',lock:()=>kl?'Terbuka bersama tab Clients':null,param:['visit','Maks per hari',[[1,'1'],[2,'2'],[3,'3']]]},
+ {k:'review',ic:'📊',n:'Rapat evaluasi KPI bulanan',d:'Rapat evaluasi KPI dengan klien dijadwalkan otomatis bila kualitas site memenuhi batas.',why:'Klien menghargai laporan KPI yang rutin dan jujur. Rapat saat kualitas buruk justru bisa merugikan, jadi ada batas kualitas.',cost:'Tanpa biaya',lock:()=>kl?'Terbuka bersama tab Clients':null,param:['reviewQ','Hanya bila kualitas ≥',[[60,'60'],[70,'70'],[80,'80']]]},
+ {k:'k3',ic:'⛑️',n:'Sertifikasi K3 bertahap',d:'Setiap Senin, karyawan site yang belum bersertifikat K3 dikirim pelatihan (maks 1 orang per site agar site tidak kosong).',why:'Tim bersertifikat K3 menurunkan risiko kecelakaan kerja hingga ±45% dan disukai klien industri.',cost:'Biaya pelatihan K3 per orang',lock:()=>emp<10?`Terbuka saat karyawan ≥ 10 (sekarang ${emp})`:null,param:['k3','Orang per minggu',[[1,'1'],[2,'2'],[4,'4']]]},
+ {k:'k3resp',ic:'🔎',n:'Respons insiden K3: investigasi (RCA)',d:'Setiap insiden K3 otomatis ditangani dengan investigasi akar masalah (RCA) & perbaikan.',why:'Standar ISO 45001: setiap insiden diinvestigasi agar tidak terulang. Menutupi insiden berisiko sanksi & kehilangan klien.',cost:'Rp2–5 jt per insiden',lock:()=>emp<10?`Terbuka saat karyawan ≥ 10 (sekarang ${emp})`:null},
+ {k:'retain',ic:'💚',n:'Retensi: naik gaji attitude rendah',d:'Karyawan dengan attitude di bawah batas mendapat kenaikan gaji 5% (maks sekali per 90 hari per orang).',why:'Biaya mengganti satu karyawan (rekrut, latih, produktivitas hilang) biasanya jauh lebih mahal dari kenaikan 5%.',cost:'+5% gaji orang tsb',lock:()=>emp<20?`Terbuka saat karyawan ≥ 20 (sekarang ${emp})`:null,param:['retain','Bila attitude <',[[30,'30'],[40,'40'],[50,'50']]]}]}
+function sopIsOn(D){if(D.pol)return !!(S.co.policy||{})[D.pol];return !!sopS().on[D.k]}
+function sopLog(k,t,c){const P=sopS();P.log.unshift({d:day(),k,t,c:c||0});if(P.log.length>150)P.log.length=150}
+function sopAmHas(bid){try{return amList().some(e=>(e.accts||[]).includes(bid))}catch(e){return false}}
+function sopRel(bid,k){const a=REL_ACTS[k],b=bById(bid);if(relCdLeft(bid,k)||S.cash<a.cost)return false;if(a.cost)spend(a.cost,`SOP: ${a.s} dengan ${b.bm.split(' (')[0]}`);const g=relGain(bid,k);const r=relOf(bid);r.cd[k]=day();r.last=day();S.stats.meetings=(S.stats.meetings||0)+1;relAdd(bid,g,'SOP: '+a.s);
+  const s=S.sites.find(x=>x.b===bid&&x.status==='aktif');if(s&&k==='review'){if(s.sp&&s.q>=70)s.goodDays=(s.goodDays||0)+3;s.trust=clamp((s.trust||60)+g/2,0,100)}sopLog(k==='review'?'review':'visit',`${a.s} ${b.n} (hubungan ${g>=0?'+':''}${Math.round(g*10)/10})`,a.cost);return true}
+function sopDaily(d){if(!S||S.over||S.ch)return;const P=sopS();const D=sopDefs();const ok=k=>{const x=D.find(y=>y.k===k);return x&&!x.lock()&&sopIsOn(x)};
+  if(ok('bench')&&!hrOn()){activeSites().forEach(s=>{let n=0;FROLES.concat(['supervisor','sm']).forEach(r=>{let need=siteShort(s,r);while(need>0){const c=siteCity(s);const e=S.emps.filter(x=>!x.siteId&&x.role===r&&!isAM(x)&&!inTraining(x)).sort((a,b)=>(needMess(a,c)?1:0)-(needMess(b,c)?1:0))[0];if(!e)break;e.siteId=s.id;if(e.post)setPost(e,null);need--;n++}});if(n)sopLog('bench',`${n} standby ditempatkan di ${bById(s.b).n}`)})}
+  if(ok('visit')){const L=activeSites().filter(s=>s.status==='aktif'&&!sopAmHas(s.b)&&d-relOf(s.b).last>=12&&!relCdLeft(s.b,'visit')).sort((a,b)=>relOf(a.b).last-relOf(b.b).last);L.slice(0,P.p.visit).forEach(s=>sopRel(s.b,'visit'))}
+  if(ok('review')){let n=0;activeSites().filter(s=>s.status==='aktif'&&!sopAmHas(s.b)&&s.q>=P.p.reviewQ&&!relCdLeft(s.b,'review')).forEach(s=>{if(n<2&&sopRel(s.b,'review'))n++})}
+  if(ok('k3')&&dow(d)===1){const tr=TRAININGS.k3;const c=trCost(tr);let n=0;const used=new Set();
+    activeSites().filter(s=>s.status==='aktif'&&empsAt(s).length>=4).forEach(s=>{if(n>=P.p.k3||used.has(s.id))return;const e=empsAt(s).find(x=>!x.k3&&!isAM(x)&&!inTraining(x)&&x.present!==false&&trOk('k3',x));if(!e||S.cash<c)return;spend(c,`SOP: pelatihan K3 ${e.name}`);startTraining(e,'k3');used.add(s.id);n++;sopLog('k3',`${e.name} ikut pelatihan K3 (${bById(s.b).n})`,c)})}
+  if(ok('k3resp')){(S.inbox||[]).filter(m=>m.kind==='v53k3'&&!m.done).forEach(m=>{if(S.cash<5e6)return;const c0=S.cash;try{handleChoice(m,'rca')}catch(e){reportErr('SOP K3',e);return}m.read=true;sopLog('k3resp',`RCA insiden: ${m.subj.replace(/^Insiden K3 /,'')}`,Math.max(0,c0-S.cash))})}
+  if(ok('retain')){S.emps.filter(e=>!isAM(e)&&!e.cand&&e.moral<P.p.retain&&(e.sopRaise==null||d-e.sopRaise>=90)).forEach(e=>{const add=Math.round(e.wage*.05);e.wage+=add;e.moral=clamp(e.moral+10,0,100);e.sopRaise=d;sopLog('retain',`${e.name}: gaji +5% (attitude naik)`,add)})}
+  markDirty()}
+{const _nd76=newDay;newDay=function(d){const r=_nd76.apply(this,arguments);try{sopDaily(d)}catch(e){reportErr('SOP',e)}return r}}
+function pSop(){const P=sopS();const D=sopDefs();const d=day();const L30=P.log.filter(x=>d-x.d<=30);
+  const sel=(k,opts)=>`<select data-sopp="${k}" aria-label="${k}">${opts.map(([v,t])=>`<option value="${v}" ${String(P.p[k])===String(v)?'selected':''}>${t}</option>`).join('')}</select>`;
+  const onN=D.filter(x=>!x.lock()&&sopIsOn(x)).length;
+  return `<div class="sec"><h3>📜 SOP & Otomasi</h3><div class="small"><b>SOP (Standard Operating Procedure)</b> adalah aturan tetap yang dijalankan tim tanpa menunggu perintah Anda. Pemilik usaha yang baik <b>membuat sistem</b>, bukan mengerjakan semuanya sendiri.</div>
+   <div class="grid2">${kpi('SOP aktif',onN+' / '+D.length)}${kpi('Dijalankan 30 hari',L30.length+'×')}${kpi('Biaya SOP 30 hari',jt(L30.reduce((a,x)=>a+x.c,0)))}${kpi('Otomasi lain',`<span class="small">${hrOn()?'HR ✓':'HR —'} · ${amList().length?'AM ✓':'AM —'}</span>`)}</div></div>
+  ${D.map(x=>{const lk=x.lock();const on=!lk&&sopIsOn(x);const n=P.log.filter(y=>y.k===x.k&&d-y.d<=30).length;const nt=x.note?x.note():'';
+    return `<div class="card sopc ${on?'on':''} ${lk?'lk':''}"><div class="spread"><b>${lk?'🔒':x.ic} ${x.n}</b><button class="tgl ${on?'on':''}" data-act="sopT" data-k="${x.k}" role="switch" aria-checked="${on}" ${lk?'disabled':''} aria-label="${esc(x.n)}"><i></i></button></div>
+     <div class="small">${x.d}</div><div class="tiny sopwhy">💡 ${x.why}</div>
+     <div class="row tiny muted" style="gap:10px;flex-wrap:wrap"><span>Biaya: ${x.cost}</span>${x.param&&!lk?`<label>${x.param[1]} ${sel(x.param[0],x.param[2])}</label>`:''}${!x.pol&&!lk?`<span>30 hari: <b>${n}×</b></span>`:''}</div>${lk?`<div class="tiny" style="color:var(--warn)">${lk}</div>`:''}${nt?`<div class="tiny" style="color:var(--data)">${nt}</div>`:''}</div>`}).join('')}
+  <div class="sec"><h3>Aktivitas SOP terbaru</h3>${P.log.slice(0,10).map(x=>`<div class="spread small"><span>${(D.find(y=>y.k===x.k)||{ic:'•'}).ic} ${esc(x.t)}</span><span class="tiny mono muted">${dstr(x.d,1)}${x.c?' · '+jt(x.c):''}</span></div>`).join('')||'<div class="empty">Belum ada. SOP berjalan setiap pagi.</div>'}</div>
+  <div class="sec"><h3>Otomasi lain</h3><div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm" data-act="tab" data-v="tim">🧑‍💼 Fungsi HR (rekrut otomatis)</button>${roleAllowed('am')?'<button class="btn sm" data-act="tab" data-v="am">🧭 Kebijakan Area Manager (tender otomatis)</button>':''}</div><div class="tiny muted">Stok bahan habis pakai sudah dipesan ulang otomatis saat tinggal 5 hari (10 hari dengan gudang).</div></div>`}
+document.addEventListener('change',e=>{const t=e.target;if(!S||!t||!t.dataset||!t.dataset.sopp)return;sopS().p[t.dataset.sopp]=+t.value;markDirty();toast('Pengaturan SOP disimpan')},true);
+// ringkasan "Selama Anda pergi"
+function awaySnap(){const T=S.tenders;return {won:T.filter(t=>t.status==='won').length,lost:T.filter(t=>t.status==='lost').length,sites:activeSites().length,emps:S.emps.length,res:S.stats.resign||0,rep:S.rep,q:(()=>{const a=S.sites.filter(s=>s.status==='aktif');return a.length?a.reduce((x,s)=>x+s.q,0)/a.length:null})(),log0:S.log[0],sop:(S.sop&&S.sop.log||[]).length?S.sop.log[0]:null}}
+function awayHtml(a){try{const b=awaySnap();const dv=(x,y,f)=>{const v=x-y;return v?`${v>0?'+':''}${f?f(v):v}`:'0'};const L=[];
+  const won=b.won-a.won,lost=b.lost-a.lost;if(won)L.push(`🏆 Menang ${won} tender`);if(lost)L.push(`✕ Kalah ${lost} tender`);
+  if(b.sites!==a.sites)L.push(`🏢 Kontrak aktif ${a.sites} → ${b.sites}`);const res=b.res-a.res;if(res)L.push(`🚪 ${res} karyawan resign`);
+  if(b.emps!==a.emps)L.push(`👥 Karyawan ${a.emps} → ${b.emps}`);if(a.q!=null&&b.q!=null&&Math.abs(b.q-a.q)>=1)L.push(`${b.q>a.q?'📈':'📉'} Kualitas rata-rata ${Math.round(a.q)} → ${Math.round(b.q)}`);
+  if(Math.abs(b.rep-a.rep)>=1)L.push(`⭐ Reputasi ${Math.round(a.rep)} → ${Math.round(b.rep)}`);
+  const sl=S.sop&&S.sop.log||[];const sn=a.sop?sl.indexOf(a.sop):sl.length;if(sn>0)L.push(`📜 SOP berjalan ${sn}×`);
+  const li=a.log0?S.log.indexOf(a.log0):S.log.length;const noise=/^(Prakiraan|Tutup hari)|pos terisi|^Gaji|: Rp/;const ev=S.log.slice(0,li<0?40:li).filter(x=>!noise.test(x.t)).slice(0,6);
+  return `${L.length?`<div class="awayl">${L.map(x=>`<span class="chip">${x}</span>`).join('')}</div>`:''}${ev.length?`<div class="small"><b>Kejadian terakhir</b>${ev.map(x=>`<div class="tiny">${dstr(x.d,1)} · ${esc(x.t)}</div>`).join('')}</div>`:''}`}catch(e){return ''}}
 function tenderDetail(t){const b=bById(t.b);const g=tenderGate(b,t);const dr=t.draft;if(t.rec.spv==null)Object.assign(t.rec,mgmtRec(b,t.rec));if(dr.spv==null){dr.spv=t.rec.spv||0;dr.msm=t.rec.msm||0}const pr=priceOf(b,t.svc,dr,dr.props,dr.margin,.05);const locked=t.status!=='open';
   const nw_=r=>reqTotal(r)-(r.waste||0);const staffR=nw_(t.rec)?nw_(dr)/nw_(t.rec):1;
   const stepper=(k,l)=>`<div class="spread"><span>${l}${t.survey?` <span class="tiny muted">(survei: ${t.rec[k]})</span>`:''}</span><div class="step"><button data-act="bidStep" data-id="${t.id}" data-k="${k}" data-v="-1" ${locked?'disabled':''}>−</button><b>${dr[k]}</b><button data-act="bidStep" data-id="${t.id}" data-k="${k}" data-v="1" ${locked?'disabled':''}>+</button></div></div>`;
@@ -3919,9 +3971,7 @@ function pPT(){const c=S.co;const pend=k=>c.pending.find(p=>p.k===k);const left=
   <div class="sec"><h3>Armada</h3>
   <div class="spread small card"><span><b>Motor operasional</b><div class="tiny muted">Petugas tiba 8–15 menit lebih cepat saat komplain.</div></span>${c.motor?'<span class="chip good">Ada</span>':`<span class="row"><button class="btn sm" data-act="motor">Bensin · Rp22 jt</button><button class="btn sm" data-act="evmotor">Listrik · Rp28 jt</button></span>`}</div>
   <div class="spread small card"><span><b>Truk sampah 3/4</b><div class="tiny muted">Sewa Rp14 jt/bln, atau miliki lewat IMBT di Pusat Pendanaan. Biaya angkut residu turun dari Rp300rb ke Rp150rb/ton.</div></span>${c.truckOwn?'<span class="chip good">Milik sendiri</span>':c.truckFin?'<span class="chip acc">IMBT berjalan</span>':`<button class="btn sm ${c.truck?'pri':''}" data-act="truck">${c.truck?'Sewa aktif · hentikan':'Sewa'}</button>`}</div></div>
-  <div class="sec"><h3>Kebijakan delegasi</h3><div class="tiny muted">Manajer menetapkan kebijakan; tim menjalankannya saat Anda tidak memantau.</div>
-  <label class="chk"><input type="checkbox" data-act="policy" data-k="autoLeader" ${c.policy.autoLeader?'checked':''}><span><b>Leader tangani komplain ringan</b> — otomatis dalam 20–40 menit bila leader hadir.</span></label>
-  <label class="chk"><input type="checkbox" data-act="policy" data-k="reliever" ${c.policy.reliever?'checked':''}><span><b>Isi pos kosong dengan reliever</b> — lembur Rp160rb/orang/shift.</span></label></div>
+  <div class="sec"><h3>Kebijakan delegasi</h3><div class="small">Kebijakan delegasi (Leader tangani komplain, reliever, kunjungan klien rutin, K3, retensi, dll.) kini dikumpulkan di satu tempat.</div><div class="row"><button class="btn sm pri" data-act="tab" data-v="sop">📜 Buka SOP & Otomasi</button></div></div>
   <div class="sec"><h3>Mesin Regulasi</h3><div class="tbl"><table><tbody>
   <tr><td>UMK Mahkota Raya 2026</td><td class="r mono">${rp(UMP)}</td></tr><tr><td>BPJS porsi pemberi kerja (JKK ${+(BPJS.JKK*100).toFixed(2)}%, JKM ${+(BPJS.JKM*100).toFixed(2)}%, JHT ${+(BPJS.JHT*100).toFixed(2)}%, JP ${+(BPJS.JP*100).toFixed(2)}%, Kesehatan ${+(BPJS.KES*100).toFixed(2)}%)</td><td class="r mono">${(BPJS_TOTAL*100).toFixed(2)}%</td></tr>
   <tr><td>PPN jasa (12% × DPP 11/12)</td><td class="r mono">11%</td></tr><tr><td>PPh 23 dipotong klien</td><td class="r mono">2%</td></tr><tr><td>THR (cadangan bulanan)</td><td class="r mono">1/12 upah</td></tr></tbody></table></div>
@@ -4001,7 +4051,7 @@ document.addEventListener('change',e=>{const t=e.target;if(!S)return;
   if(t.dataset.bind==='margin')renderPanel(true)});
 /* ============================ CONFIRMATION ============================ */
 let CONFIRM_OPEN=false;
-const NO_CONFIRM=new Set(['hub','tdyTog','tndF','klF','empCard','stokRush','campCopy','ligaC','hhAM','amkHide','amkReset','fieldGo','pinCmp','autoPause','pastToggle','arrAuto','arrFund','fcSet','fcTender','fcAdd','fcOpen','timReset','chEnter','chJoin','chView','chLeave','chCode','logout','finOpen','finFilter','finHelp','toggleRelHelp','makeCode','copyCode','toggleHelp','tab','openTender','backTender','openSite','backSite','layer','bld','readAll','copyRapor','bidStep','bidProp']);
+const NO_CONFIRM=new Set(['sopT','hub','tdyTog','tndF','klF','empCard','stokRush','campCopy','ligaC','hhAM','amkHide','amkReset','fieldGo','pinCmp','autoPause','pastToggle','arrAuto','arrFund','fcSet','fcTender','fcAdd','fcOpen','timReset','chEnter','chJoin','chView','chLeave','chCode','logout','finOpen','finFilter','finHelp','toggleRelHelp','makeCode','copyCode','toggleHelp','tab','openTender','backTender','openSite','backSite','layer','bld','readAll','copyRapor','bidStep','bidProp']);
 function request(a,d){if(typeof FIELD!=='undefined')FIELD.ua=performance.now();if(S&&S.over&&!NAV_ACTS.has(a)){toast('Perusahaan sudah pailit. Mulai perusahaan baru dari Dashboard.');return}if(!NAV_ACTS.has(a)&&!syncCan())return;if(!chGuard(a))return;if(NO_CONFIRM.has(a)){act(a,{dataset:d});return}
   if(a==='train'){d.mod=($('#tr_'+d.id)||{}).value;if(!d.mod)return toast('Pilih jenis pelatihan dulu di daftar "Latih…"')}
   if(a==='bulk'&&!d.role){d.n=$('#bulkN').value;d.role=$('#bulkRole').value}
@@ -5084,15 +5134,15 @@ function startGame(cfg){S=freshState(cfg);if(cfg.ch){S.ch=cfg.ch;S.speed=1;S.t=M
   mail('Mesin Regulasi','Aturan yang berlaku di game',`UMK Mahkota Raya 2026: ${rp(UMP)}. PPN jasa efektif 11% (12% × DPP 11/12). PPh 23 2% dipotong klien. BPJS porsi pemberi kerja ±${(BPJS_TOTAL*100).toFixed(2)}% (tabel data, perlu verifikasi). RUU Pelindungan Ketenagakerjaan dijadwalkan disahkan 8 Oktober 2026; modul alih daya akan diperbarui setelahnya.`);
   log('Perusahaan berdiri di Kenanga Asri');uxNewGame(cfg);save();syncSoon();renderLayers();renderPanel(true)}
 function catchUp(){if(S&&S.ch)return;const el=Date.now()-(S.lastReal||Date.now());const gm=Math.min(amCatchCap(),Math.floor(el/1000*.4));if(gm<30)return;
-  const c0=S.cash,cm0=S.stats.onTime+S.stats.late,d0=day();const from=Math.floor(S.t);S.t+=gm;for(let tm=from+1;tm<=Math.floor(S.t);tm++)processMinute(tm);
+  const c0=S.cash,cm0=S.stats.onTime+S.stats.late,d0=day();const aw0=awaySnap();const from=Math.floor(S.t);S.t+=gm;for(let tm=from+1;tm<=Math.floor(S.t);tm++)processMinute(tm);
   const hrs=Math.round(el/36e5*10)/10;$('#modalRoot').innerHTML=`<div class="modal" role="dialog" aria-modal="true"><div class="box"><span class="eyebrow">Dunia terus berjalan</span><h2 style="font-size:22px">Selama Anda pergi (${hrs} jam nyata)</h2>
    <div class="grid2">${kpi('Waktu game berlalu',`${Math.round(gm/60)} jam (${dstr(d0,1)} → ${dstr(day(),1)})`)}${kpi('Perubahan kas',jt(S.cash-c0),S.cash-c0<0?'neg':'')}${kpi('Komplain selesai',S.stats.onTime+S.stats.late-cm0)}${kpi('Pesan belum dibaca',S.inbox.filter(m=>!m.read).length)}</div>
-   ${amList().length?`<div class="small">Area Manager bekerja selama Anda pergi. ${amPending().length?`<b>${amPending().length} usulan menunggu persetujuan</b> di tab Area Manager.`:'Tidak ada usulan yang menunggu.'}</div>`:''}<div class="small muted">Tim menjalankan site sesuai kebijakan delegasi Anda. Catch-up dibatasi ${amCatchCap()/1440} hari game${amList().length?'':' (7 hari bila punya Area Manager)'}.</div><div class="row" style="justify-content:flex-end"><button class="btn pri" onclick="document.getElementById('modalRoot').innerHTML=''">Lanjutkan</button></div></div></div>`}
+   ${awayHtml(aw0)}${amList().length?`<div class="small">Area Manager bekerja selama Anda pergi. ${amPending().length?`<b>${amPending().length} usulan menunggu persetujuan</b> di tab Area Manager.`:'Tidak ada usulan yang menunggu.'}</div>`:''}<div class="small muted">Tim menjalankan site sesuai kebijakan delegasi Anda. Catch-up dibatasi ${amCatchCap()/1440} hari game${amList().length?'':' (7 hari bila punya Area Manager)'}.</div><div class="row" style="justify-content:flex-end;gap:6px">${hubOn()?`<button class="btn" onclick="document.getElementById('modalRoot').innerHTML='';S.ui.tab='ringkas';renderPanel(true)">📋 Lihat Tugas Hari Ini</button>`:''}<button class="btn pri" onclick="document.getElementById('modalRoot').innerHTML=''">Lanjutkan</button></div></div></div>`}
 
 /* ============================ v40: RAMAH PEMAIN BARU (Prioritas 1 & 2) ============================
    P1: menu terbuka bertahap + perayaan, tutorial interaktif 5 langkah, tombol "Apa yang harus saya lakukan?" + kartu Langkah berikutnya.
    P2 (HP): navigasi bawah, menu More, peta ringkas yang bisa dibuka penuh, detail sebagai lembar bawah, target sentuh 44px. */
-const UX_ALWAYS=new Set(['admin','kampanye','ringkas','tender','site','tim','inbox']);
+const UX_ALWAYS=new Set(['admin','kampanye','ringkas','tender','site','tim','inbox','sop']);
 const UX_TABINFO={
   klien:{ok:()=>S.sites.length>0,why:'Terbuka setelah Anda memenangkan kontrak pertama.',d:'Bangun hubungan dengan klien: kunjungan, evaluasi KPI, dan peluang kontrak baru.'},
   uang:{ok:()=>S.sites.length>0||S.emps.length>0,why:'Terbuka setelah Anda merekrut karyawan pertama.',d:'Pantau kas, proyeksi gajian, piutang, dan sumber pendanaan.'},
@@ -5103,7 +5153,7 @@ const UX_TABINFO={
   hijau:{ok:()=>S.sites.some(s=>s.svc.includes('waste'))||S.obj>=5||!!(S.tpst&&S.tpst.built),why:'Terbuka setelah Anda punya site dengan layanan sampah.',d:'Kelola pemilahan, bank sampah, dan TPST 3R.'},
   liga:{ok:()=>S.stats.bids>0||S.sites.length>0,why:'Terbuka setelah Anda memasukkan penawaran pertama.',d:'Klasemen vendor FM per kota & pulau, profil 4 kompetitor, kontrak kompetitor yang akan berakhir, dan berita pasar.'},
   challenge:{ok:()=>S.sites.length>0||!!S.ch||!!GATE.isAdmin||!!CH.admin||(CH.list||[]).some(c=>c.status!=='arsip'&&chState(c)!=='selesai'),why:'Terbuka setelah Anda memenangkan kontrak pertama, atau saat trainer membuka challenge.',d:'Bertanding dengan pemain lain dalam rentang waktu yang sama.'}};
-const UX_DESC={inbox:'Surat dari mentor, klien, karyawan, dan mitra.'};function uxDesc(k){return UX_TABINFO[k]?UX_TABINFO[k].d:UX_DESC[k]||''}
+const UX_DESC={inbox:'Surat dari mentor, klien, karyawan, dan mitra.',sop:'Aturan otomatis yang dijalankan tim tanpa menunggu perintah Anda.'};function uxDesc(k){return UX_TABINFO[k]?UX_TABINFO[k].d:UX_DESC[k]||''}
 function uxTabName(k){const t=TABS.find(x=>x[0]===k);return t?t[1]:k}
 function uxInitUnl(){if(!S)return;if(!S.tabUnl){S.tabUnl={};TABS.forEach(([k])=>S.tabUnl[k]=1)}}
 function uxTabLocked(k){if(!S||UX_ALWAYS.has(k))return false;uxInitUnl();if(S.tabUnl[k])return false;const r=UX_TABINFO[k];return r?!r.ok():false}
@@ -5176,7 +5226,7 @@ function uxTut(){const T=S&&S.tut;const hole=$('#uxHole'),bub=$('#uxBub');if(!T|
 /* ---------- HP: navigasi bawah, Lainnya, peta, lembar bawah ---------- */
 const UX_MQ=window.matchMedia?matchMedia('(max-width:760px), (pointer:coarse) and (max-height:520px)'):{matches:false};
 const UX_NAV=[['ringkas','🏠','Dashboard'],['tender','📄','Tender'],['site','🏢','Sites'],['tim','👥','Team']];
-const UX_ICON={klien:'🤝',am:'🧭',hijau:'♻️',uang:'💰',pt:'🏛️',profil:'🏅',inbox:'✉️',rapor:'📊',challenge:'🏆',admin:'🛡️'};
+const UX_ICON={sop:'📜',klien:'🤝',am:'🧭',hijau:'♻️',uang:'💰',pt:'🏛️',profil:'🏅',inbox:'✉️',rapor:'📊',challenge:'🏆',admin:'🛡️'};
 function uxCounts(){const unread=inbCounts().need;const openC=S.sites.reduce((a,s)=>a+s.cmps.filter(c=>!c.done).length,0);const openT=S.tenders.filter(t=>t.status==='open'&&!t.bid&&!tenderGate(bById(t.b),t)).length;
   let gaps=0;try{gaps=S.sites.filter(s=>s.status==='aktif').reduce((a,s)=>a+GAP_ROLES().reduce((b,r)=>b+siteShort(s,r),0),0)}catch(e){}
   const amP=(typeof amPending==='function'&&roleAllowed('am'))?amPending().length:0;return {inbox:unread,site:openC,tender:openT,tim:gaps,am:amP,profil:(S.pr&&S.pr.newN)||0}}
