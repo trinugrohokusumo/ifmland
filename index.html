@@ -3784,7 +3784,7 @@ function tdyFill(){const F=[];const d=day();
   if(!uxTabLocked('klien'))F.push({k:'f:meet',t:'Sapa 1 klien atau calon klien',why:'Hubungan baik menambah skor saat tender dan membuat klien bertahan.',btn:['tab','klien','Buka Clients'],fill:'meet',m0:S.stats.meetings||0});
   if(S.sites.some(s=>s.status==='aktif'))F.push({k:'f:site',t:'Cek kualitas site Anda',why:'Site dengan kualitas di bawah 60 rawan komplain dan surat peringatan.',btn:['tab','site','Buka Sites'],fill:'tab:site'});
   return F}
-function tdyGet(){if(!S)return null;const d=day();let cur=[];try{cur=uxNext().filter(x=>x.u>0)}catch(e){}const ck={};cur.forEach(x=>{const k=tdyKey(x);if(!ck[k])ck[k]=x});
+function tdyGet(){if(!S)return null;const d=day();const nw=performance.now();if(S.tdy&&S.tdy.d===d&&tdyGet._s===S&&nw-(tdyGet._t||0)<2500&&!tdyGet._force){S.tdy.it.forEach(x=>{if(!x.done&&x.fill&&x.fill.startsWith('tab:')&&S.ui.tab===x.fill.slice(4))x.done=1});return S.tdy}tdyGet._t=nw;tdyGet._s=S;tdyGet._force=0;let cur=[];try{cur=uxNext().filter(x=>x.u>0)}catch(e){}const ck={};cur.forEach(x=>{const k=tdyKey(x);if(!ck[k])ck[k]=x});
   let T=S.tdy;if(!T||T.d!==d){const it=[];Object.keys(ck).slice(0,3).forEach(k=>{const x=ck[k];it.push({k,t:x.t,why:x.why,btn:x.btn,u:x.u,obj:x.obj?S.obj:null})});
     tdyFill().forEach(f=>{if(it.length<3)it.push(f)});T=S.tdy={d,it,cel:0}}
   T.it.forEach(x=>{if(x.done)return;if(x.fill){if(x.fill==='meet'&&(S.stats.meetings||0)>x.m0)x.done=1;if(x.fill.startsWith('tab:')&&S.ui.tab===x.fill.slice(4))x.done=1;if(x.fill==='sop'&&sopDefs().some(y=>!y.lock()&&sopIsOn(y)))x.done=1;return}
@@ -3867,7 +3867,9 @@ function certNeed(e){const a=certMissing(e).slice();try{const st=e.siteId&&e.sit
 {const _ac=auditCheck;auditCheck=function(s){const r=_ac(s);try{empsAt(s).forEach(e=>{certExtraMissing(e).forEach(k=>{if(k==='gada'&&postOf(e)==='satpam')return;r.major.push(`${e.name}: ${CERTS[k].wtxt||ROLES[postOf(e)].n} tanpa ${CERTS[k].n}`)})})}catch(x){}return r}}
 // ---- Pengembangan Mandiri ----
 var DEV_CAP={leader:20,supervisor:15,sm:8};
-function devOn(){try{const D=sopDefs().find(x=>x.k==='dev');return !!(D&&sopIsOn(D))}catch(e){return false}}
+function devOn(){return !!(S&&S.sop&&S.sop.on&&S.sop.on.dev)}
+{const _uc=uxCounts;uxCounts=function(){const n=performance.now();if(uxCounts._c&&uxCounts._s===S&&n-uxCounts._t<400)return uxCounts._c;uxCounts._t=n;uxCounts._s=S;return uxCounts._c=_uc()}}
+{const _dl=decList;decList=function(){const n=performance.now();if(decList._c&&decList._s===S&&n-decList._t<1500)return decList._c.slice();decList._t=n;decList._s=S;decList._d=S.t;decList._c=_dl();return decList._c.slice()}}
 function devMk(d){const t=dateOf(d);return t.getUTCFullYear()*12+t.getUTCMonth()}
 function devPeng(s){return empsAt(s).filter(e=>DEV_CAP[e.role]&&e.present!==false&&!inTraining(e))}
 function devStaff(s){return empsAt(s).filter(e=>!DEV_CAP[e.role]&&!isAM(e))}
