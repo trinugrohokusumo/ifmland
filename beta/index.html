@@ -4474,6 +4474,7 @@ function init3D(){const host=$('#map3d');
   if(!window.THREE){host.innerHTML='<div class="empty" style="margin:40px 16px">Peta 3D tidak bisa dimuat (pustaka WebGL terblokir). Permainan tetap berjalan lewat panel di samping.</div>';return}
   let r;try{r=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'})}catch(e){host.innerHTML='<div class="empty" style="margin:40px 16px">Perangkat ini tidak mendukung WebGL. Permainan tetap berjalan lewat panel.</div>';return}
   r.setPixelRatio(Math.min(1.75,window.devicePixelRatio||1));r.shadowMap.enabled=true;r.shadowMap.type=THREE.PCFSoftShadowMap;
+  r.outputEncoding=THREE.sRGBEncoding;r.toneMapping=THREE.ACESFilmicToneMapping;r.toneMappingExposure=1.08;
   host.prepend(r.domElement);r.domElement.setAttribute('aria-label','Peta 3D Mahkota Raya');r.domElement.tabIndex=0;
   const scene=new THREE.Scene();const cam=new THREE.PerspectiveCamera(36,1.6,4,7000);
   scene.fog=new THREE.Fog(0xa7cbe8,1500,3600);
@@ -4602,9 +4603,9 @@ function init3D(){const host=$('#map3d');
     if(side===0)m.position.set(o.cx,y,o.cz+(rnd_?e:hh+.18));else if(side===1){m.position.set(o.cx,y,o.cz-(rnd_?e:hh+.18));m.rotation.y=Math.PI}else if(side===2){m.position.set(o.cx+(rnd_?e:hw+.18),y,o.cz);m.rotation.y=Math.PI/2}else{m.position.set(o.cx-(rnd_?e:hw+.18),y,o.cz);m.rotation.y=-Math.PI/2}
     m.scale.set(wid,wid/4,1);scene.add(m)};
   const talSet=new Set(talls);const signable=talls.concat(lows.filter(o=>o.H>=8&&!hs.has(o)));let nsg=0;
-  signable.forEach(o=>{if(nsg>150||R2()>.5)return;const b=o.b;const side=Math.floor(R2()*4);const fw=side<2?b.w:b.h;const wid=Math.min(fw*.86,20);const topH=o.shape==='setback'?o.H*.68:o.H;
+  signable.forEach(o=>{if(nsg>210||R2()>.68)return;const b=o.b;const side=Math.floor(R2()*4);const fw=side<2?b.w:b.h;const wid=Math.min(fw*.86,20);const topH=o.shape==='setback'?o.H*.68:o.H;
     face(o,side,wid,.9+topH-wid/8-1.2,pool[Math.floor(R2()*pool.length)]);nsg++;
-    if(talSet.has(o)&&(o.shape==='box'||o.shape==='setback')&&R2()<.35){const m=new THREE.Mesh(plane,pool[Math.floor(R2()*pool.length)]);const w2=Math.min(b.w*.9,22);m.scale.set(w2,w2/4,1);m.position.set(o.cx,.9+o.H+w2/8+.3,TZ(b.y+b.h)-.6);scene.add(m);nsg++}});
+    if(talSet.has(o)&&(o.shape==='box'||o.shape==='setback')&&R2()<.48){const m=new THREE.Mesh(plane,pool[Math.floor(R2()*pool.length)]);const w2=Math.min(b.w*.9,22);m.scale.set(w2,w2/4,1);m.position.set(o.cx,.9+o.H+w2/8+.3,TZ(b.y+b.h)-.6);scene.add(m);nsg++}});
   // ciri khas gedung klien
   const addClientExtras=(b,d)=>{const X=TX(b.x),Z=TZ(b.y),top=.9+d[1];
     if(b.type==='Perkantoran A'){const c=new THREE.Mesh(pyr,L(0x7f9bb3));c.scale.set(d[0]*.8,16,d[2]*.8);c.position.set(X,top,Z);c.castShadow=true;scene.add(c);const a=new THREE.Mesh(antG,L(0xd0d3d5));a.scale.set(1.2,14,1.2);a.position.set(X,top+15,Z);scene.add(a)}
