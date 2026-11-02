@@ -4475,7 +4475,7 @@ function init3D(){const host=$('#map3d');
   if(!window.THREE){host.innerHTML='<div class="empty" style="margin:40px 16px">Peta 3D tidak bisa dimuat (pustaka WebGL terblokir). Permainan tetap berjalan lewat panel di samping.</div>';return}
   let r;try{r=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'})}catch(e){host.innerHTML='<div class="empty" style="margin:40px 16px">Perangkat ini tidak mendukung WebGL. Permainan tetap berjalan lewat panel.</div>';return}
   r.setPixelRatio(Math.min(1.75,window.devicePixelRatio||1));r.shadowMap.enabled=true;r.shadowMap.type=THREE.PCFSoftShadowMap;
-  r.outputEncoding=THREE.sRGBEncoding;r.toneMapping=THREE.ACESFilmicToneMapping;r.toneMappingExposure=1.08;
+  r.outputEncoding=THREE.sRGBEncoding;r.toneMapping=THREE.ACESFilmicToneMapping;r.toneMappingExposure=.92;
   host.prepend(r.domElement);r.domElement.setAttribute('aria-label','Peta 3D Mahkota Raya');r.domElement.tabIndex=0;
   const scene=new THREE.Scene();const cam=new THREE.PerspectiveCamera(36,1.6,4,7000);
   scene.fog=new THREE.Fog(0xa7cbe8,1500,3600);
@@ -4562,7 +4562,8 @@ function init3D(){const host=$('#map3d');
   const mkMats=(cols,rows,seed,roof)=>{const side=new THREE.MeshLambertMaterial({map:wallTex(cols,rows),emissiveMap:litTex(cols,rows,seed),emissive:0xffffff,emissiveIntensity:0});return [side,side,L(roof),L(roof),side,side]};
   G.sideMats=[];const low=mkMats(3,3,11,0xb9b3a8),tall=mkMats(4,12,23,0x9fa6ad);G.sideMats.push(low[0],tall[0]);
   const lows=[],talls=[];BLD.forEach(b=>{const cbd=b.x>440&&b.x<780&&b.y>190&&b.y<470;const H=cbd?16+b.z*4.4:4+b.z*2.4;(H>22?talls:lows).push({b,H,cbd})});
-  const pal=['#efe7d8','#e2d6c4','#d8dfe6','#e7dccf','#dde6d6','#f2ead9','#d6d9dc','#e9dfe6','#e8d3bd','#cfdde2'],glass=['#b6cbdc','#9fb8cf','#c8d4de','#aebfcc','#d4dbe0'];
+  // v80: palet gedung diperkaya - sebelumnya nyaris semua krem/pastel nyaris putih, bikin kota kelihatan pucat terutama di bawah tone mapping baru
+  const pal=['#d9a06b','#c97b5c','#8c9a7a','#6f8a95','#b85c4e','#a3a8a0','#d4b483','#5c7a8a','#9c5b4a','#7a8f6e','#c08552','#4f7a7f','#b06a4e','#8a7866','#6b8299'],glass=['#4f7a9c','#3d6480','#5c8fa8','#2d5670','#6fa3bc','#3a5a7a','#588fa3'];
   const R2=mulberry(77);G.neonMats=[];
   const lm=inst(box,low,lows.length,true);
   lows.forEach((o,i)=>{const b=o.b;o.cx=TX(b.x+b.w/2);o.cz=TZ(b.y+b.h/2);put(lm,i,o.cx,.9,o.cz,b.w,o.H,b.h,0,pal[Math.floor(R2()*pal.length)])});
@@ -4900,8 +4901,8 @@ function render3D(dt){if(!G.ok)return;const t=performance.now()/1000;
   const p=(h-6)/12;const isDay=p>0&&p<1;const el=isDay?Math.sin(p*Math.PI):0;
   if(isDay)G.sun.position.set(CAM.tx+Math.cos(p*Math.PI)*900,40+el*900,CAM.tz+260);else G.sun.position.set(CAM.tx-300,700,CAM.tz+200);
   G.sun.target.position.set(CAM.tx,0,CAM.tz);
-  G.sun.intensity=isDay?(.35+el*.85)*(rain?.45:1):.18;G.sun.color.set(isDay?(el<.3?0xffc38a:0xfff2de):0x9fb6ff);
-  G.hemi.intensity=isDay?.45+el*.35:.28;G.hemi.color.set(isDay?0xdfefff:0x6a7fb0);G.hemi.groundColor.set(isDay?0x6b6a55:0x1c2230);
+  G.sun.intensity=isDay?(.3+el*.6)*(rain?.45:1):.18;G.sun.color.set(isDay?(el<.3?0xffc38a:0xfff2de):0x9fb6ff);
+  G.hemi.intensity=isDay?.4+el*.22:.28;G.hemi.color.set(isDay?0xdfefff:0x6a7fb0);G.hemi.groundColor.set(isDay?0x6b6a55:0x1c2230);
   G.sideMats.forEach(m=>m.emissiveIntensity=nf*.95);G.lampGlow.material.opacity=nf*.95;G.headGlow.material.opacity=nf;G.neonMats.forEach(m=>m.emissiveIntensity=.12+nf*1.1);G.tailGlow.material.opacity=nf*.9;
   G.sea.material.color.set(nf>.5?0x2a3324:0xaebd92);if(G.lake)G.lake.material.color.set(nf>.5?0x0f2a40:0x4f8fb0);G.ground.material.color.set(nf>.5?0x2d3327:0xb9c2a6);
   // clouds & rain & flood
