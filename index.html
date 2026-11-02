@@ -652,6 +652,16 @@ function rp(n){const s=Math.round(n);return (s<0?'−':'')+'Rp'+Math.abs(s).toLo
 function jt(n){if(n&&Math.abs(n)<1e6)return (n<0?'−':'')+'Rp'+Math.round(Math.abs(n)/1e3).toLocaleString('id-ID')+' rb';const v=n/1e6;return (v<0?'−':'')+'Rp'+Math.abs(v).toLocaleString('id-ID',{maximumFractionDigits:Math.abs(v)<10?1:0})+' jt'}
 function dateOf(day){return new Date(START+day*864e5)}
 function dow(day){return dateOf(day).getUTCDay()}
+/* v80: perkiraan kalender Hijriah (akurasi ±1-2 hari, cukup untuk nuansa cerita) agar event Ramadan/Muharram
+   tidak muncul acak di bulan manapun. Jangkar: 1 Ramadan 1447H ≈ 18 Feb 2026. 1 tahun Hijriah ≈ 354.367 hari,
+   1 bulan Hijriah ≈ 29.53 hari; Muharram (bulan ke-1) jatuh 8 bulan sebelum Ramadan (bulan ke-9).
+   Dibungkus try/catch dan dibatasi jendela wajar supaya aman walau kalender game melesat jauh ke masa depan.
+   Akurasi menurun untuk game-day yang sangat ekstrem (>puluhan tahun dari sekarang), tapi fallback aman ke 'bukan musim'.*/
+function hijriWindow(ms,anchorMs,winDays){const yr=354.367056*864e5;let n=Math.round((ms-anchorMs)/yr);let start=anchorMs+n*yr;if(ms<start-5*864e5){n--;start=anchorMs+n*yr}else if(ms>start+yr-5*864e5){n++;start=anchorMs+n*yr}return ms>=start-864e5&&ms<=start+winDays*864e5}
+function isRamadanDay(day){try{const ms=dateOf(day).getTime();return hijriWindow(ms,Date.UTC(2026,1,18),30)}catch(e){return false}}
+function isMuharramDay(day){try{const ms=dateOf(day).getTime();return hijriWindow(ms,Date.UTC(2026,1,18)-8*29.53059*864e5,30)}catch(e){return false}}
+function isHutRiSeason(day){const m=dateOf(day).getUTCMonth(),dd=dateOf(day).getUTCDate();return m===7&&dd>=1&&dd<=25}
+function isRainySeason(day){const m=dateOf(day).getUTCMonth();return m>=10||m<=2}
 function dstr(day,short){const d=dateOf(day);return short?`${d.getUTCDate()} ${BULAN[d.getUTCMonth()].slice(0,3)}`:`${HARI[d.getUTCDay()]}, ${d.getUTCDate()} ${BULAN[d.getUTCMonth()]} ${d.getUTCFullYear()}`}
 function dom(day){return dateOf(day).getUTCDate()}
 function isMonthEnd(day){return dom(day+1)===1}
@@ -1313,7 +1323,7 @@ function promote(e){const c=promoCheck(e);if(!c||!c.ok)return false;const from=e
   mail('HR',`${e.name} naik jabatan menjadi ${c.title}`,`Jalur ${TRACK_N[e.track]||'umum'}: ${fromN} → ${c.title}. Gaji ${jt(old)} → ${jt(e.wage)}/bln. ${c.to==='leader'?`Tetap di ${site?bById(site.b).n:'penugasan sekarang'}; posisi ${fromN.toLowerCase()} yang ditinggalkan perlu diisi.`:c.to==='supervisor'?`${c.title} adalah orang site: tempatkan di site (tab Team). Disarankan untuk site dengan 11 staf atau lebih.`:c.to==='am'?'Area Manager baru bisa langsung diberi akun klien di tab Area Manager. Ia sudah paham lapangan dari bawah.':`Tugaskan ${c.title} ke satu site di tab Team.`} Rekan kerja melihat level karier yang jelas (attitude +1).`);return true}
 function promoMonthly(){if(!featOk('promo'))return;const el=S.emps.filter(e=>{const c=promoCheck(e);return c&&c.ok});if(el.length)mail('HR',`${el.length} karyawan siap dipromosikan`,el.slice(0,10).map(e=>`• ${e.name}: ${roleName(e)} → ${promoCheck(e).title} (Skill ${sk(e.kerja)})`).join('\n')+'\n\nPromosi di tab Team. Karyawan berprestasi yang lama tidak dipromosikan lebih mudah dibajak kompetitor.')}
 /* ============================ v8: AKTIVITAS KOTA & PROYEK GEDUNG ============================ */
-const EV_LOC={demo:[[530,150,'Tugu Mahkota & Medan Pusaka'],[470,470,'Gedung Dewan Gelora Raya'],[620,240,'Bundaran Mahkota']],konser:[[489,510,'Stadion Utama Gelora Raya','b13'],[700,170,'Mahkota Expo','b17']]};
+const EV_LOC={demo:[[480,150,'Tugu Mahkota & Medan Pusaka'],[470,470,'Gedung Dewan Gelora Raya'],[620,240,'Bundaran Mahkota']],konser:[[489,510,'Stadion Utama Gelora Raya','b13'],[700,170,'Mahkota Expo','b17']]};
 function cityInit(){if(!S)return;if(!S.city){S.city={proj:[],ev:[]};let d0=day();BUILDINGS.filter(b=>b.future).forEach((b,i)=>{const st=d0+rint(2,14)+i*rint(8,16);S.city.proj.push({bid:b.id,start:st,end:st+rint(25,45),done:false})})}S.city.ev=S.city.ev||[];cityEvUpdate()}
 function evActive(e){const d=day(),h=S.t%1440/60;if(d<e.d0||d>e.d1)return false;if(e.h0!=null&&(h<e.h0||h>=e.h1))return false;return true}
 function cityEvUpdate(){CITY.slow=new Map();if(!S||!S.city)return;S.city.ev.filter(evActive).forEach(e=>{if(e.k==='jalan')[e.a+'-'+e.b,e.b+'-'+e.a].forEach(k=>CITY.slow.set(k,.3));
@@ -1358,7 +1368,7 @@ function commDaily(d){if(!featOk('comm'))return;S.comm=S.comm||{};S.sites.filter
   if(S.inbox.some(m=>m.kind==='comm'&&m.site===s.id&&!m.done))return;
   if(R()>(['Pelabuhan','Pabrik','Gudang','Bandara'].includes(b.type)?.05:.03))return;
   const r=R();if(r<.4){const k=Math.max(1,Math.round(reqTotal(s.req)*(.1+R()*.1)));mail(c.tokoh,`Permintaan jatah kerja untuk warga ${c.name}`,`Assalamualaikum. Banyak pemuda warga kami menganggur. Kami minta ${k} warga dipekerjakan di ${b.n}. Kami siap bantu keamanan lingkungan.`,{kind:'comm',sub:'jatah',site:s.id,n:k,choices:[{k:'terima',l:`Sanggupi ${k} orang dalam 14 hari`},{k:'sebagian',l:`Sanggupi ${Math.ceil(k/2)} orang`},{k:'tolak',l:'Tolak dengan sopan'}]})}
-  else if(r<.75){const occ=pick(['peringatan HUT RI di lingkungan RW','santunan anak yatim bulan Muharam','perbaikan musala warga','takjil Ramadan untuk warga','bantuan warga terdampak genangan']);mail(c.tokoh,`Permohonan partisipasi: ${occ}`,`Warga ${c.name} mengajukan permohonan partisipasi perusahaan untuk ${occ}.`,{kind:'comm',sub:'donasi',site:s.id,choices:[{k:'d1',l:'Bantu Rp500 rb'},{k:'d2',l:'Bantu Rp1 jt'},{k:'d3',l:'Bantu Rp2,5 jt'},{k:'tolak',l:'Belum bisa membantu'}]})}
+  else if(r<.75){const opts=['perbaikan musala warga'];if(isHutRiSeason(d))opts.push('peringatan HUT RI di lingkungan RW');if(isMuharramDay(d))opts.push('santunan anak yatim bulan Muharam');if(isRamadanDay(d))opts.push('takjil Ramadan untuk warga');if(isRainySeason(d))opts.push('bantuan warga terdampak genangan');const occ=pick(opts);mail(c.tokoh,`Permohonan partisipasi: ${occ}`,`Warga ${c.name} mengajukan permohonan partisipasi perusahaan untuk ${occ}.`,{kind:'comm',sub:'donasi',site:s.id,choices:[{k:'d1',l:'Bantu Rp500 rb'},{k:'d2',l:'Bantu Rp1 jt'},{k:'d3',l:'Bantu Rp2,5 jt'},{k:'tolak',l:'Belum bisa membantu'}]})}
   else{const iss=pick(['bau dari TPS gedung sampai ke rumah warga','karyawan parkir motor di jalan kampung','suara mesin poles/pompa malam hari','sampah gedung tercecer di selokan warga']);mail(c.tokoh,'Keluhan warga sekitar',`Warga mengeluhkan ${iss} dari ${b.n}. Mohon ditindaklanjuti.`,{kind:'comm',sub:'keluhan',site:s.id,choices:[{k:'tangani',l:'Tangani & sosialisasi (Rp750 rb)'},{k:'abaikan',l:'Abaikan'}]})}})}
 function commChoice(m,k){const s=siteOf(m.site);if(!s)return;const c=commOf(s.b);
   if(m.sub==='jatah'){if(k==='terima'){c.quota=commLocals(s)+m.n;c.qUntil=day()+14;commAdd(s.b,10,'Menyanggupi jatah kerja warga')}else if(k==='sebagian'){c.quota=commLocals(s)+Math.ceil(m.n/2);c.qUntil=day()+14;commAdd(s.b,3,'Menyanggupi sebagian jatah kerja')}else commAdd(s.b,-15,'Menolak jatah kerja warga');
@@ -4335,12 +4345,13 @@ function railAt(r,f){let L=railLen(r)*f;for(let i=1;i<r.pts.length;i++){const a=
 function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 const SR=mulberry(20261005);const BLD=[];
 const blocks=[];const xsB=[0,...XS,1000],ysB=[42,...YS,640];
-for(let i=0;i<xsB.length-1;i++)for(let j=0;j<ysB.length-1;j++)blocks.push({x0:xsB[i]+7,y0:ysB[j]+7,x1:xsB[i+1]-7,y1:ysB[j+1]-7});
+for(let i=0;i<xsB.length-1;i++)for(let j=0;j<ysB.length-1;j++)blocks.push({x0:xsB[i]+5,y0:ysB[j]+5,x1:xsB[i+1]-5,y1:ysB[j+1]-5});
 function zoneOf(x,y){if(x<168&&y>50&&y<185)return'air';if(x>462&&x<598&&y>94&&y<196)return'park';if(x>462&&x<515&&y>454&&y<566)return'park';if(x>762&&x<898&&y>582)return'halim';if(x>905&&y>330&&y<445&&x<995)return'lot';return'city'}
-blocks.forEach(bk=>{for(let k=0;k<22;k++){const w=8+SR()*18,h=7+SR()*15;const x=bk.x0+SR()*(bk.x1-bk.x0-w),y=bk.y0+SR()*(bk.y1-bk.y0-h);if(x<bk.x0||y<bk.y0)continue;const z=zoneOf(x+w/2,y+h/2);if(z!=='city')continue;
+/* v80: lebih banyak percobaan isi & jarak antar gedung dipersempit -> pusat kota lebih padat, tanah kosong berkurang */
+blocks.forEach(bk=>{for(let k=0;k<40;k++){const w=7+SR()*16,h=6+SR()*13;const x=bk.x0+SR()*(bk.x1-bk.x0-w),y=bk.y0+SR()*(bk.y1-bk.y0-h);if(x<bk.x0||y<bk.y0)continue;const z=zoneOf(x+w/2,y+h/2);if(z!=='city')continue;
   if(Math.abs(y+h/2-385)<9||Math.abs(x+w/2-530)<9||(Math.abs(x+w/2-606)<8&&y>290))continue;
   if(BUILDINGS.some(b=>Math.hypot(b.x-(x+w/2),b.y-(y+h/2))<22)||Math.hypot(HQ.x-(x+w/2),HQ.y-(y+h/2))<16)continue;
-  if(BLD.some(o=>x<o.x+o.w+3&&x+w+3>o.x&&y<o.y+o.h+3&&y+h+3>o.y))continue;
+  if(BLD.some(o=>x<o.x+o.w+1.6&&x+w+1.6>o.x&&y<o.y+o.h+1.6&&y+h+1.6>o.y))continue;
   const cbd=x>440&&x<780&&y>190&&y<470;BLD.push({x,y,w,h,z:cbd?4+SR()*14:1.5+SR()*5,lit:SR()})}});
 BLD.sort((a,b)=>a.y-b.y);
 /* v44: gedung yang tertabrak jalan berkelok/sungai/tol disingkirkan; kampung padat & masjid ditambahkan */
@@ -4420,7 +4431,12 @@ function citySim(dt){const h=S?hour():8,m=S?mins():480,d=S?day():0,wk=S?(dow(d)=
     const toOffice=m<720;const tgt=toOffice?pick(BLD.filter(b=>b.z>6).concat(BUILDINGS)):{x:sx+(R()-.5)*160,y:sy+(R()-.5)*160};const tx=tgt.x+(tgt.w||0)/2,ty=tgt.y+(tgt.h||0)/2;const kind=R()<.3?'hijab':R()<.08?'child':'adult';
     walkers.push(toOffice?mkWalk(sx,sy,tx,ty,kind):mkWalk(tx,ty,sx,sy,kind))}
   if(S&&!wk&&vs>0){BUILDINGS.filter(b=>b.school).forEach(b=>{const inW=(m>=375&&m<=430)||(m>=780&&m<=870);if(inW&&R()<dt*8&&walkers.length<300){const ang=R()*6.28,r=40+R()*30;const o=[b.x+Math.cos(ang)*r,b.y+Math.sin(ang)*r],s=[b.x+(R()-.5)*8,b.y+(R()-.5)*8];const pts=m>=780?[s,o]:[o,s];walkers.push({pts,i:0,x:pts[0][0],y:pts[0][1],s:3.4,kind:'child',col:'#f4f4f2',ang:0})}})}
-  if(S&&S.city&&vs>0)S.city.ev.forEach(e=>{if((e.k==='demo'||e.k==='konser')&&evActive(e)&&walkers.length<320&&R()<dt*14){const pts=[];for(let i=0;i<8;i++){const a=R()*6.28,r=6+R()*(e.k==='demo'?28:40);pts.push([e.x+Math.cos(a)*r,e.y+Math.sin(a)*r])}walkers.push({pts,i:0,x:pts[0][0],y:pts[0][1],s:1.5,kind:R()<.3?'hijab':'adult',col:e.k==='demo'?pick(['#f2f2ee','#c0392b','#1f5fa8','#f2f2ee']):pick(SHIRT),ang:0})}});
+  if(S&&S.city&&vs>0)S.city.ev.forEach(e=>{if((e.k==='demo'||e.k==='konser')&&evActive(e)){
+    const cap=e.k==='demo'?420:320;
+    if(e.k==='demo'&&!e.burst){e.burst=true;for(let i=0;i<46&&walkers.length<cap;i++){const a=R()*6.28,r=4+R()*26;const pts=[];for(let j=0;j<8;j++){const aa=R()*6.28,rr=6+R()*28;pts.push([e.x+Math.cos(aa)*rr,e.y+Math.sin(aa)*rr])}
+      walkers.push({pts,i:0,x:e.x+Math.cos(a)*r,y:e.y+Math.sin(a)*r,s:1.5,kind:R()<.3?'hijab':'adult',col:pick(['#f2f2ee','#c0392b','#1f5fa8','#f2f2ee']),ang:0})}}
+    if(walkers.length<cap&&R()<dt*14){const pts=[];for(let i=0;i<8;i++){const a=R()*6.28,r=6+R()*(e.k==='demo'?28:40);pts.push([e.x+Math.cos(a)*r,e.y+Math.sin(a)*r])}walkers.push({pts,i:0,x:pts[0][0],y:pts[0][1],s:1.5,kind:R()<.3?'hijab':'adult',col:e.k==='demo'?pick(['#f2f2ee','#c0392b','#1f5fa8','#f2f2ee']):pick(SHIRT),ang:0})}
+  }});
   walkers=walkers.filter(w=>{const nx=w.pts[w.i+1];if(!nx)return false;const dx=nx[0]-w.x,dy=nx[1]-w.y,dd=Math.hypot(dx,dy);const st=w.s*vs*dt;if(dd>0)w.ang=Math.atan2(dy,dx);if(dd<=st){w.x=nx[0];w.y=nx[1];w.i++;return w.i<w.pts.length-1}w.x+=dx/dd*st;w.y+=dy/dd*st;return true});
   if(S&&h>=4&&h<9&&vs>0&&R()<dt*.25&&cars.filter(c=>c.type==='garb'&&!c.mine).length<10){const b=pick(BLD);spawnGarbage({x:b.x,y:b.y},TPA_EXIT,false)}
 }
@@ -4462,18 +4478,19 @@ function cityExtras(){const put=G.put,box=G.box,L=G.L;
   // laut beriak
   const waveTex=mkTex(256,256,g=>{g.fillStyle='#e9eef2';g.fillRect(0,0,256,256);const R=mulberry(31);for(let i=0;i<420;i++){const x=R()*256,y=R()*256,l=6+R()*18;g.strokeStyle=R()<.55?`rgba(255,255,255,${.35+R()*.5})`:`rgba(150,170,190,${.25+R()*.35})`;g.lineWidth=1+R()*1.6;g.beginPath();g.moveTo(x,y);g.quadraticCurveTo(x+l/2,y-2-R()*2,x+l,y);g.stroke()}});
   waveTex.wrapS=waveTex.wrapT=THREE.RepeatWrapping;waveTex.repeat.set(70,32);G.waveTex=null;
-  G.hazeCol=new THREE.Color(0xd2c8b4);G.roadWet=new THREE.Color(0x23282d);G.roadDry=new THREE.Color(0x3b4046)}
+  G.hazeCol=new THREE.Color(0xdccfb0);G.roadWet=new THREE.Color(0x23282d);G.roadDry=new THREE.Color(0x3b4046)}
 function cityFxTick(t,nf,rain){if(!G.pools)return;const low=typeof PERF!=='undefined'&&PERF.low;
   G.pools.visible=nf>.05&&!low;G.pools.material.opacity=nf*(rain?.75:.55);
   if(G.waveTex){G.waveTex.offset.x=(t*.006)%1;G.waveTex.offset.y=(Math.sin(t*.15)*.02)}
   // kabut/haze khas Mahkota Raya: siang sedikit kecokelatan & jarak pandang lebih pendek, hujan lebih rapat
-  const f=G.scene.fog;if(rain){f.near=500;f.far=2300}else{f.near=1500-650*(1-nf);f.far=3600-700*(1-nf)}if(!rain&&nf<.9)f.color.lerp(G.hazeCol,.28*(1-nf));
+  const f=G.scene.fog;if(rain){f.near=500;f.far=2300}else{f.near=1500-650*(1-nf);f.far=3600-700*(1-nf)}if(!rain&&nf<.9)f.color.lerp(G.hazeCol,.15*(1-nf));
   if(G.roadMat)G.roadMat.color.copy(rain?G.roadWet:G.roadDry)}
 
 function init3D(){const host=$('#map3d');
   if(!window.THREE){host.innerHTML='<div class="empty" style="margin:40px 16px">Peta 3D tidak bisa dimuat (pustaka WebGL terblokir). Permainan tetap berjalan lewat panel di samping.</div>';return}
   let r;try{r=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'})}catch(e){host.innerHTML='<div class="empty" style="margin:40px 16px">Perangkat ini tidak mendukung WebGL. Permainan tetap berjalan lewat panel.</div>';return}
   r.setPixelRatio(Math.min(1.75,window.devicePixelRatio||1));r.shadowMap.enabled=true;r.shadowMap.type=THREE.PCFSoftShadowMap;
+  r.outputEncoding=THREE.sRGBEncoding;r.toneMapping=THREE.ACESFilmicToneMapping;r.toneMappingExposure=.92;
   host.prepend(r.domElement);r.domElement.setAttribute('aria-label','Peta 3D Mahkota Raya');r.domElement.tabIndex=0;
   const scene=new THREE.Scene();const cam=new THREE.PerspectiveCamera(36,1.6,4,7000);
   scene.fog=new THREE.Fog(0xa7cbe8,1500,3600);
@@ -4560,7 +4577,8 @@ function init3D(){const host=$('#map3d');
   const mkMats=(cols,rows,seed,roof)=>{const side=new THREE.MeshLambertMaterial({map:wallTex(cols,rows),emissiveMap:litTex(cols,rows,seed),emissive:0xffffff,emissiveIntensity:0});return [side,side,L(roof),L(roof),side,side]};
   G.sideMats=[];const low=mkMats(3,3,11,0xb9b3a8),tall=mkMats(4,12,23,0x9fa6ad);G.sideMats.push(low[0],tall[0]);
   const lows=[],talls=[];BLD.forEach(b=>{const cbd=b.x>440&&b.x<780&&b.y>190&&b.y<470;const H=cbd?16+b.z*4.4:4+b.z*2.4;(H>22?talls:lows).push({b,H,cbd})});
-  const pal=['#efe7d8','#e2d6c4','#d8dfe6','#e7dccf','#dde6d6','#f2ead9','#d6d9dc','#e9dfe6','#e8d3bd','#cfdde2'],glass=['#b6cbdc','#9fb8cf','#c8d4de','#aebfcc','#d4dbe0'];
+  // v80: palet gedung diperkaya - sebelumnya nyaris semua krem/pastel nyaris putih, bikin kota kelihatan pucat terutama di bawah tone mapping baru
+  const pal=['#d9a06b','#c97b5c','#8c9a7a','#6f8a95','#b85c4e','#a3a8a0','#d4b483','#5c7a8a','#9c5b4a','#7a8f6e','#c08552','#4f7a7f','#b06a4e','#8a7866','#6b8299'],glass=['#4f7a9c','#3d6480','#5c8fa8','#2d5670','#6fa3bc','#3a5a7a','#588fa3'];
   const R2=mulberry(77);G.neonMats=[];
   const lm=inst(box,low,lows.length,true);
   lows.forEach((o,i)=>{const b=o.b;o.cx=TX(b.x+b.w/2);o.cz=TZ(b.y+b.h/2);put(lm,i,o.cx,.9,o.cz,b.w,o.H,b.h,0,pal[Math.floor(R2()*pal.length)])});
@@ -4586,6 +4604,26 @@ function init3D(){const host=$('#map3d');
   const flat=talls.filter(o=>o.shape==='box'||o.shape==='setback');const ru=inst(box,L(0x9aa0a4),flat.length*2,true);flat.forEach((o,i)=>{const b=o.b;put(ru,i*2,TX(b.x+b.w*.36),.9+o.H,TZ(b.y+b.h*.4),b.w*.2,2.2,b.h*.2);put(ru,i*2+1,TX(b.x+b.w*.64),.9+o.H,TZ(b.y+b.h*.6),b.w*.15,3.2,b.w*.15)});
   {const hel=flat.filter(o=>o.cbd&&o.H>42&&o.shape==='box'&&o.b.w>14&&o.b.h>14).filter((o,i)=>i%2===0);const hpT=mkTex(128,128,g=>{g.fillStyle='#3d4247';g.fillRect(0,0,128,128);g.strokeStyle='#f2c230';g.lineWidth=6;g.beginPath();g.arc(64,64,50,0,7);g.stroke();g.strokeStyle='#ffffff';g.lineWidth=3;g.strokeRect(6,6,116,116);g.fillStyle='#ffffff';g.font='bold 64px Arial, sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText('H',64,68)});
    const hpTop=new THREE.MeshLambertMaterial({map:hpT}),hpSide=L(0x55595e);const hp=cityInstLocal(box,[hpSide,hpSide,hpTop,hpSide,hpSide,hpSide],hel.length,true);hel.forEach((o,i)=>{const b=o.b;const sz=Math.min(b.w,b.h)*.7;put(hp,i,o.cx,.9+o.H+3.4,o.cz,sz,.5,sz)});
+   // v80: helikopter - kadang parkir di helipad, kadang terbang pindah ke helipad lain
+   G.helipads=hel.map(o=>({x:o.cx,y:.9+o.H+4.1,z:o.cz}));G.heli=[];
+   if(G.helipads.length>=1){
+     const mkHeli=liv=>{const g=new THREE.Group();
+       const body=new THREE.Mesh(new THREE.CylinderGeometry(1,1.05,3.4,10),L(liv));body.rotation.z=Math.PI/2;body.castShadow=true;g.add(body);
+       const nose=new THREE.Mesh(new THREE.SphereGeometry(1,10,8),L(liv));nose.scale.set(1,.9,.9);nose.position.x=1.7;g.add(nose);
+       const tail=new THREE.Mesh(box,L(liv));tail.scale.set(3.4,.55,.55);tail.position.set(-3.1,.15,0);g.add(tail);
+       const fin=new THREE.Mesh(box,L(0xc0392b));fin.scale.set(.45,1.3,.45);fin.position.set(-4.6,.75,0);g.add(fin);
+       const skidL=new THREE.Mesh(box,L(0x2c2c2c));skidL.scale.set(3.2,.12,.12);skidL.position.set(0,-1.25,.85);g.add(skidL);
+       const skidR=skidL.clone();skidR.position.z=-.85;g.add(skidR);
+       const rotor=new THREE.Mesh(box,L(0x24262a));rotor.scale.set(7.2,.08,.32);rotor.position.y=1.3;g.add(rotor);
+       const rotor2=new THREE.Mesh(box,L(0x24262a));rotor2.scale.set(7.2,.08,.32);rotor2.rotation.y=Math.PI/2;rotor2.position.y=1.3;g.add(rotor2);
+       const tailRotor=new THREE.Mesh(box,L(0x24262a));tailRotor.scale.set(.08,1.2,.16);tailRotor.position.set(-4.6,.75,.4);g.add(tailRotor);
+       g.traverse(o=>o.castShadow=true);G.scene.add(g);return {g,rotor,rotor2,tailRotor};};
+     const LIV=[0xf2f2ee,0xe6e6e6];const n=Math.min(2,G.helipads.length);
+     for(let i=0;i<n;i++){const pi=Math.floor(i*G.helipads.length/n);const start=G.helipads[pi];const h=mkHeli(LIV[i%LIV.length]);h.g.position.set(start.x,start.y,start.z);
+       G.heli.push(Object.assign(h,{state:'parked',pad:pi,timer:6+R2()*20,from:null,to:null,prog:0,queue:[]}))}
+   }
+   // spanduk/bendera demo - dipakai saat demo acak Mahkota Raya aktif, disembunyikan (count=0) saat tidak ada demo
+   {const n=10;G.demoPole=cityInstLocal(box,L(0xdddddd),n);G.demoFlag=cityInstLocal(box,L(0xc0392b),n);G.demoPole.count=0;G.demoFlag.count=0}
    const acs=[];flatLow.forEach(o=>{if(R2()<.5){const b=o.b;const n=1+Math.floor(R2()*3);for(let k=0;k<n;k++)acs.push([TX(b.x+b.w*(.62+k*.11)),.9+o.H,TZ(b.y+b.h*.72)])}});const ac=cityInstLocal(box,L(0xd9dcdf),acs.length,true);acs.forEach((a,i)=>put(ac,i,a[0],a[1],a[2],1.5,1.1,1.1,0));
    const fans=cityInstLocal(new THREE.CylinderGeometry(.42,.42,.08,10),L(0x3a3f45),acs.length);acs.forEach((a,i)=>put(fans,i,a[0],a[1]+1.12,a[2],1,1,1))}
   // nama gedung & toko: neon box dan huruf timbul (menyala di malam hari)
@@ -4602,9 +4640,19 @@ function init3D(){const host=$('#map3d');
     if(side===0)m.position.set(o.cx,y,o.cz+(rnd_?e:hh+.18));else if(side===1){m.position.set(o.cx,y,o.cz-(rnd_?e:hh+.18));m.rotation.y=Math.PI}else if(side===2){m.position.set(o.cx+(rnd_?e:hw+.18),y,o.cz);m.rotation.y=Math.PI/2}else{m.position.set(o.cx-(rnd_?e:hw+.18),y,o.cz);m.rotation.y=-Math.PI/2}
     m.scale.set(wid,wid/4,1);scene.add(m)};
   const talSet=new Set(talls);const signable=talls.concat(lows.filter(o=>o.H>=8&&!hs.has(o)));let nsg=0;
-  signable.forEach(o=>{if(nsg>150||R2()>.5)return;const b=o.b;const side=Math.floor(R2()*4);const fw=side<2?b.w:b.h;const wid=Math.min(fw*.86,20);const topH=o.shape==='setback'?o.H*.68:o.H;
+  signable.forEach(o=>{if(nsg>210||R2()>.68)return;const b=o.b;const side=Math.floor(R2()*4);const fw=side<2?b.w:b.h;const wid=Math.min(fw*.86,20);const topH=o.shape==='setback'?o.H*.68:o.H;
     face(o,side,wid,.9+topH-wid/8-1.2,pool[Math.floor(R2()*pool.length)]);nsg++;
-    if(talSet.has(o)&&(o.shape==='box'||o.shape==='setback')&&R2()<.35){const m=new THREE.Mesh(plane,pool[Math.floor(R2()*pool.length)]);const w2=Math.min(b.w*.9,22);m.scale.set(w2,w2/4,1);m.position.set(o.cx,.9+o.H+w2/8+.3,TZ(b.y+b.h)-.6);scene.add(m);nsg++}});
+    if(talSet.has(o)&&(o.shape==='box'||o.shape==='setback')&&R2()<.48){const m=new THREE.Mesh(plane,pool[Math.floor(R2()*pool.length)]);const w2=Math.min(b.w*.9,22);m.scale.set(w2,w2/4,1);m.position.set(o.cx,.9+o.H+w2/8+.3,TZ(b.y+b.h)-.6);scene.add(m);nsg++}});
+  // v80: billboard reklame berdiri bebas di persimpangan jalan utama - memadatkan kesan pusat kota tanpa gedung baru
+  {const bbRows=[42,...YS,640];let nbb=0;
+   for(let i=1;i<XS.length;i+=2)for(let j=1;j<bbRows.length-1;j+=2){if(nbb>=16)break;const x=XS[i],y=bbRows[j];if(zoneOf(x,y)!=='city')continue;
+    if(BUILDINGS.some(b=>Math.hypot(b.x-x,b.y-y)<18)||Math.hypot(HQ.x-x,HQ.y-y)<18)continue;if(rsHit(x,y,6))continue;
+    if(Math.abs(y-385)<10||Math.abs(x-530)<10)continue;
+    const X=TX(x),Z=TZ(y);const pole=new THREE.Mesh(box,L(0x7c8187));pole.scale.set(.9,12,.9);pole.position.set(X,6,Z);pole.castShadow=true;scene.add(pole);
+    const bw=9+R2()*4,bh=bw/2.6;const bbMat=pool[Math.floor(R2()*pool.length)];
+    const s1=new THREE.Mesh(plane,bbMat);s1.scale.set(bw,bh,1);s1.position.set(X,12.2,Z+.08);scene.add(s1);
+    const s2=new THREE.Mesh(plane,bbMat);s2.scale.set(bw,bh,1);s2.rotation.y=Math.PI;s2.position.set(X,12.2,Z-.08);scene.add(s2);
+    const fr=new THREE.Mesh(box,L(0x3a3f44));fr.scale.set(bw+.5,bh+.5,.35);fr.position.set(X,12.2,Z);scene.add(fr);nbb++}}
   // ciri khas gedung klien
   const addClientExtras=(b,d)=>{const X=TX(b.x),Z=TZ(b.y),top=.9+d[1];
     if(b.type==='Perkantoran A'){const c=new THREE.Mesh(pyr,L(0x7f9bb3));c.scale.set(d[0]*.8,16,d[2]*.8);c.position.set(X,top,Z);c.castShadow=true;scene.add(c);const a=new THREE.Mesh(antG,L(0xd0d3d5));a.scale.set(1.2,14,1.2);a.position.set(X,top+15,Z);scene.add(a)}
@@ -4671,7 +4719,7 @@ function init3D(){const host=$('#map3d');
   for(let i=0;i<3;i++){const c=new THREE.Group();const leg=new THREE.Mesh(box,L(0xd0572e));leg.scale.set(2,22,2);c.add(leg);const arm=new THREE.Mesh(box,L(0xd0572e));arm.position.set(0,22,-8);arm.scale.set(2,2,24);c.add(arm);c.position.set(TX(784+i*20),1,TZ(30));c.traverse(o=>o.castShadow=true);scene.add(c)}
   G.ships=[];if(0)[0,1,2].map(i=>{const s=new THREE.Group();const hull=new THREE.Mesh(box,L(i?0x2d4f6c:0x8a2f2f));hull.scale.set(40,4,9);s.add(hull);const st=new THREE.Mesh(box,L(0xf0f0ea));st.position.set(-12,4,0);st.scale.set(8,7,7);s.add(st);const ct=new THREE.Mesh(box,L([0xc98b2e,0x3d7ea6,0x7aa64a][i]));ct.position.set(6,4,0);ct.scale.set(20,4,7);s.add(ct);s.traverse(o=>o.castShadow=true);scene.add(s);return {g:s,ph:i*.37,sp:.012+i*.004,lane:-60-i*45}});
   // landmarks: Tugu Mahkota & stadion
-  const monas=new THREE.Group();const plat=new THREE.Mesh(box,L(0xe8e3d6));plat.scale.set(24,4,24);monas.add(plat);const ob=new THREE.Mesh(new THREE.CylinderGeometry(1.4,3,62,4),L(0xf2eee4));ob.position.y=35;ob.rotation.y=Math.PI/4;monas.add(ob);const cup=new THREE.Mesh(new THREE.CylinderGeometry(6,3,4,4),L(0xe8e3d6));cup.position.y=48;cup.rotation.y=Math.PI/4;monas.add(cup);const flame=new THREE.Mesh(new THREE.ConeGeometry(2.2,6,8),new THREE.MeshLambertMaterial({color:0xe7b73c,emissive:0x6a4a00}));flame.position.y=69;monas.add(flame);monas.position.set(TX(530),.9,TZ(145));monas.traverse(o=>o.castShadow=true);scene.add(monas);
+  const monas=new THREE.Group();const plat=new THREE.Mesh(box,L(0xe8e3d6));plat.scale.set(24,4,24);monas.add(plat);const ob=new THREE.Mesh(new THREE.CylinderGeometry(1.4,3,62,4),L(0xf2eee4));ob.position.y=35;ob.rotation.y=Math.PI/4;monas.add(ob);const cup=new THREE.Mesh(new THREE.CylinderGeometry(6,3,4,4),L(0xe8e3d6));cup.position.y=48;cup.rotation.y=Math.PI/4;monas.add(cup);const flame=new THREE.Mesh(new THREE.ConeGeometry(2.2,6,8),new THREE.MeshLambertMaterial({color:0xe7b73c,emissive:0x6a4a00}));flame.position.y=69;monas.add(flame);monas.position.set(TX(480),.9,TZ(145));monas.traverse(o=>o.castShadow=true);scene.add(monas);
   const gbk=new THREE.Mesh(new THREE.CylinderGeometry(20,22,9,28,1,true),L(0xd9d4c8,{side:THREE.DoubleSide}));gbk.position.set(TX(489),5.4,TZ(510));gbk.scale.set(.9,1,1.8);gbk.castShadow=true;scene.add(gbk);const pitch=new THREE.Mesh(new THREE.CylinderGeometry(16,16,.4,24),L(0x5f9a45));pitch.position.set(TX(489),1.2,TZ(510));pitch.scale.set(.9,1,1.8);scene.add(pitch);
   // client buildings, HQ, TPST
   G.client={};const signTex=t=>mkTex(256,96,(g,w,h)=>{g.fillStyle='#1c2624';g.fillRect(0,0,w,h);g.strokeStyle='#e9e4d8';g.lineWidth=6;g.strokeRect(5,5,w-10,h-10);g.fillStyle='#fff';g.font='700 46px "Familjen Grotesk",Arial,sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(t,w/2,h/2+2)});
@@ -4759,12 +4807,17 @@ function init3D(){const host=$('#map3d');
   // pedagang kaki lima & ojek pangkalan di dekat stasiun
   G.vendors=[];G.ojol=[];const carts=[];
   Object.values(RAIL).forEach(rl=>rl.st.forEach(s=>{let x,y;if(Array.isArray(s[1]))[x,y]=s[1];else if(rl.horiz){x=s[1];y=385}else{x=rl.pts[0][0];y=s[1]}if(rl===RAIL.lrt||(rl===RAIL.mrt&&y<452))return;
-    const cx=x+9,cy=y+9;carts.push({x:TX(cx),z:TZ(cy),a:0,col:NCOL[carts.length%NCOL.length]});G.vendors.push({x:TX(cx)-1.4,z:TZ(cy),a:0,col:pick(SHIRT)});
-    for(let k=0;k<3;k++)G.ojol.push({x:TX(x-8-k*1.3),z:TZ(y+10),a:Math.PI/2,col:pick(['#1f7a4a','#1d1f22','#e6e6e6','#b7202a']),ojol:k<2})}));
+    let cx=x+9,cy=y+9,ct=0;while(rsHit(cx,cy,2.2)&&ct<8){cx+=2;cy+=2;ct++}
+    carts.push({x:TX(cx),z:TZ(cy),a:0,col:NCOL[carts.length%NCOL.length]});G.vendors.push({x:TX(cx)-1.4,z:TZ(cy),a:0,col:pick(SHIRT)});
+    let ox=x-8,oy=y+10,ot=0;while(rsHit(ox,oy,2.2)&&ot<8){oy+=2;ot++}
+    for(let k=0;k<3;k++)G.ojol.push({x:TX(ox-k*1.3),z:TZ(oy),a:Math.PI/2,col:pick(['#1f7a4a','#1d1f22','#e6e6e6','#b7202a']),ojol:k<2})}));
   stat(PT.cart,carts,true);
   // rain & clouds & flood
   const rg=new THREE.BufferGeometry();const rn=2600;rg.setAttribute('position',new THREE.BufferAttribute(new Float32Array(rn*6),3));G.rain=new THREE.LineSegments(rg,new THREE.LineBasicMaterial({color:0xa9c2d8,transparent:true,opacity:.45}));G.rain.frustumCulled=false;G.rain.visible=false;scene.add(G.rain);G.rainSeed=Array.from({length:rn},()=>[Math.random()*1400-700,Math.random()*320,Math.random()*1000-500]);
-  G.clouds=[];const cm=new THREE.MeshLambertMaterial({color:0xffffff,transparent:true,opacity:.88});for(let i=0;i<12;i++){const c=new THREE.Group();for(let k=0;k<4;k++){const s=new THREE.Mesh(new THREE.SphereGeometry(18+Math.random()*16,10,8),cm);s.position.set(k*22-30,Math.random()*6,Math.random()*18-9);s.scale.y=.45;c.add(s)}c.position.set(Math.random()*1800-900,190+Math.random()*60,Math.random()*1000-560);scene.add(c);G.clouds.push(c)}G.cloudMat=cm;
+  // v80: awan diubah dari bola solid flat-shaded (kelihatan seperti tambalan putih keras di bawah tone mapping baru) jadi sprite lembut bertekstur gradasi
+  const cloudTex=mkTex(128,128,g=>{const gr=g.createRadialGradient(64,64,4,64,64,64);gr.addColorStop(0,'rgba(255,255,255,.95)');gr.addColorStop(.45,'rgba(255,255,255,.6)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,0,128,128)});
+  G.clouds=[];const cm=new THREE.SpriteMaterial({map:cloudTex,color:0xffffff,transparent:true,opacity:.6,depthWrite:false});
+  for(let i=0;i<12;i++){const c=new THREE.Group();for(let k=0;k<4;k++){const s=new THREE.Sprite(cm);const sc=20+Math.random()*16;s.scale.set(sc*1.7,sc,1);s.position.set(k*22-30,Math.random()*6,Math.random()*18-9);c.add(s)}c.position.set(Math.random()*1800-900,190+Math.random()*60,Math.random()*1000-560);scene.add(c);G.clouds.push(c)}G.cloudMat=cm;
   G.flood=[[760,90,140,110],[600,200,160,120],[760,320,140,130]].map(p=>{const f=new THREE.Mesh(new THREE.PlaneGeometry(p[2],p[3]),new THREE.MeshPhongMaterial({color:0x4d7fa8,transparent:true,opacity:.45,shininess:90}));f.rotation.x=-Math.PI/2;f.position.set(TX(p[0]+p[2]/2),1.25,TZ(p[1]+p[3]/2));f.visible=false;scene.add(f);return f});
 
   // v8: proyek pembangunan gedung (derek, perancah, pagar) & perbaikan jalan (kerucut, pembatas, ekskavator)
@@ -4818,7 +4871,7 @@ function init3D(){const host=$('#map3d');
    // gerobak kerak telor & pedagang di pelataran Tugu Mahkota
    const kt=[];for(let i=0;i<5;i++){const a=i/5*6.28+.4;kt.push({x:TX(530+Math.cos(a)*26),z:TZ(150+Math.sin(a)*22),a:a,col:'#c8302c'});G.vendors.push({x:TX(530+Math.cos(a)*26)-1.4,z:TZ(150+Math.sin(a)*22),a:a,col:'#f4f4f0'})}stat(PT.cart,kt,true);
    // pangkalan ojol di dekat mal & stasiun: motor & pengemudi berjaket hijau (ditambahkan ke daftar parkir ojol)
-   BUILDINGS.filter(b=>b.type==='Mal'||b.type==='Rumah Sakit').forEach(b=>{const d=clientDims(b);for(let k=0;k<4;k++)G.ojol.push({x:TX(b.x-d[0]/2+3+k*1.4),z:TZ(b.y+d[2]/2+7),a:Math.PI/2,col:dp(['#1d1f22','#e6e6e6','#b7202a']),ojol:1})});
+   BUILDINGS.filter(b=>b.type==='Mal'||b.type==='Rumah Sakit').forEach(b=>{const d=clientDims(b);let bx=b.x-d[0]/2+3,by=b.y+d[2]/2+7,bt=0;while(rsHit(bx,by,2.2)&&bt<8){by+=2;bt++}for(let k=0;k<4;k++)G.ojol.push({x:TX(bx+k*1.4),z:TZ(by),a:Math.PI/2,col:dp(['#1d1f22','#e6e6e6','#b7202a']),ojol:1})});
    // layang-layang di atas kampung (siang)
    G.kites=[];const kg=new THREE.PlaneGeometry(4.2,4.2);const kp=[];for(let i=0;i<14&&KAMP.length;i++){const k=KAMP[Math.floor(DR()*KAMP.length)];const m=new THREE.Mesh(kg,new THREE.MeshLambertMaterial({color:dp(['#c8302c','#e8b931','#2466B8','#2f8a5a','#f4f4f0','#b0306a']),side:THREE.DoubleSide}));m.rotation.z=Math.PI/4;
      const o={m,x:TX(k.x+(DR()-.5)*40),z:TZ(k.y+(DR()-.5)*40),y:28+DR()*26,gx:TX(k.x),gz:TZ(k.y),ph:DR()*6};scene.add(m);G.kites.push(o);kp.push(0,0,0,0,0,0)}
@@ -4885,16 +4938,37 @@ function render3D(dt){if(!G.ok)return;const t=performance.now()/1000;
   const p=(h-6)/12;const isDay=p>0&&p<1;const el=isDay?Math.sin(p*Math.PI):0;
   if(isDay)G.sun.position.set(CAM.tx+Math.cos(p*Math.PI)*900,40+el*900,CAM.tz+260);else G.sun.position.set(CAM.tx-300,700,CAM.tz+200);
   G.sun.target.position.set(CAM.tx,0,CAM.tz);
-  G.sun.intensity=isDay?(.35+el*.85)*(rain?.45:1):.18;G.sun.color.set(isDay?(el<.3?0xffc38a:0xfff2de):0x9fb6ff);
-  G.hemi.intensity=isDay?.45+el*.35:.28;G.hemi.color.set(isDay?0xdfefff:0x6a7fb0);G.hemi.groundColor.set(isDay?0x6b6a55:0x1c2230);
+  G.sun.intensity=isDay?(.3+el*.6)*(rain?.45:1):.18;G.sun.color.set(isDay?(el<.3?0xffc38a:0xfff2de):0x9fb6ff);
+  G.hemi.intensity=isDay?.4+el*.22:.28;G.hemi.color.set(isDay?0xdfefff:0x6a7fb0);G.hemi.groundColor.set(isDay?0x6b6a55:0x1c2230);
   G.sideMats.forEach(m=>m.emissiveIntensity=nf*.95);G.lampGlow.material.opacity=nf*.95;G.headGlow.material.opacity=nf;G.neonMats.forEach(m=>m.emissiveIntensity=.12+nf*1.1);G.tailGlow.material.opacity=nf*.9;
   G.sea.material.color.set(nf>.5?0x2a3324:0xaebd92);if(G.lake)G.lake.material.color.set(nf>.5?0x0f2a40:0x4f8fb0);G.ground.material.color.set(nf>.5?0x2d3327:0xb9c2a6);
   // clouds & rain & flood
-  G.cloudMat.color.set(rain?0x8a929a:0xffffff);G.cloudMat.opacity=nf>.6?.35:.88;G.clouds.forEach((c,i)=>{c.position.x+=dt*(3+i%3)*(S?Math.min(4,S.speed/10+1):1);if(c.position.x>1000)c.position.x=-1000});
+  G.cloudMat.color.set(rain?0x8a929a:0xffffff);G.cloudMat.opacity=nf>.6?.25:.6;G.clouds.forEach((c,i)=>{c.position.x+=dt*(3+i%3)*(S?Math.min(4,S.speed/10+1):1);if(c.position.x>1000)c.position.x=-1000});
   G.rain.visible=!!rain;if(rain){const a=G.rain.geometry.attributes.position.array;const heavy=S.weather.heavy;G.rainSeed.forEach((r,i)=>{r[1]-=dt*(heavy?420:300);if(r[1]<0){r[1]=320;r[0]=Math.random()*1400-700;r[2]=Math.random()*1000-500}const x=r[0]+CAM.tx*.3,z=r[2]+CAM.tz*.3;a[i*6]=x;a[i*6+1]=r[1];a[i*6+2]=z;a[i*6+3]=x-1.5;a[i*6+4]=r[1]+(heavy?12:8);a[i*6+5]=z});G.rain.geometry.attributes.position.needsUpdate=true}
   G.flood.forEach(f=>f.visible=!!(S&&S.weather.flood&&S.weather.now));
   // ships
   G.ships.forEach(s=>{s.ph=(s.ph+dt*s.sp*(S&&S.speed?Math.min(3,S.speed/10+.5):0.3))%1;s.g.position.set(-700+s.ph*1400,.4,TZ(40)+s.lane);s.g.position.y=.3+Math.sin(t*1.2+s.lane)*.25});
+  // helikopter: parkir di helipad, kadang terbang pindah ke helipad lain
+  if(G.heli&&G.heli.length){const hs=S&&S.speed?Math.min(4,S.speed/8+.5):.4;
+    G.heli.forEach(hc=>{const spin=hc.state==='parked'?2.4:16;hc.rotor.rotation.y+=dt*spin*hs;hc.rotor2.rotation.y=hc.rotor.rotation.y+Math.PI/2;hc.tailRotor.rotation.x+=dt*spin*1.6*hs;
+      if(hc.state==='parked'){hc.timer-=dt*hs;
+        if(hc.timer<=0){const base=G.helipads[hc.pad];
+          if(G.helipads.length>1){let ni=hc.pad;do{ni=Math.floor(Math.random()*G.helipads.length)}while(ni===hc.pad);hc.queue=[G.helipads[ni]];hc.pad=ni}
+          else{const ang=Math.random()*6.28,r=50+Math.random()*90;hc.queue=[{x:base.x+Math.cos(ang)*r,y:base.y,z:base.z+Math.sin(ang)*r},base]}
+          hc.from=base;hc.to=hc.queue.shift();hc.prog=0;hc.state='flight'}
+      }else{hc.prog=Math.min(1,hc.prog+dt*hs*.1);const p=hc.prog,ease=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
+        const x=hc.from.x+(hc.to.x-hc.from.x)*ease,z=hc.from.z+(hc.to.z-hc.from.z)*ease;
+        const baseY=hc.from.y+(hc.to.y-hc.from.y)*ease,arc=Math.sin(p*Math.PI)*22;
+        hc.g.position.set(x,baseY+arc,z);const dx=hc.to.x-hc.from.x,dz=hc.to.z-hc.from.z;if(Math.hypot(dx,dz)>.01)hc.g.rotation.y=Math.atan2(dx,dz);
+        hc.g.rotation.z=Math.sin(p*Math.PI)*.08;
+        if(p>=1){if(hc.queue&&hc.queue.length){hc.from=hc.to;hc.to=hc.queue.shift();hc.prog=0}else{hc.state='parked';hc.timer=8+Math.random()*18}}}});}
+  // spanduk demo: tampil hanya saat demo acak Mahkota Raya aktif
+  if(G.demoPole){const de=S&&S.city?S.city.ev.find(e=>e.k==='demo'&&evActive(e)):null;
+    if(de){if(!de.flagPts){de.flagPts=[];for(let i=0;i<10;i++){const a=Math.random()*6.28,r=10+Math.random()*18;de.flagPts.push([Math.cos(a)*r,Math.sin(a)*r,Math.random()*6.28])}}
+      G.demoPole.count=G.demoFlag.count=de.flagPts.length;
+      de.flagPts.forEach((p,i)=>{const x=TX(de.x+p[0]),z=TZ(de.y+p[1]);G.put(G.demoPole,i,x,2.6,z,.14,5.2,.14,0);G.put(G.demoFlag,i,x+Math.cos(p[2])*.5,4.2,z+Math.sin(p[2])*.5,1.6,1,.1,p[2])});
+      G.demoPole.instanceMatrix.needsUpdate=true;G.demoFlag.instanceMatrix.needsUpdate=true;
+    }else if(G.demoPole.count){G.demoPole.count=G.demoFlag.count=0}}
   // client buildings state
   if(S){BUILDINGS.forEach(b=>{const c=G.client[b.id];if(b.future){const ex=bExists(b);c.objs.forEach(o=>{if(o!==c.flag&&o!==c.ring&&o!==c.sel&&o!==c.own)o.visible=ex});if(!ex){c.flag.visible=c.ring.visible=c.sel.visible=c.own.visible=false;return}}const s=S.sites.find(x=>x.b===b.id&&x.status!=='putus');const tn=S.tenders.find(x=>x.b===b.id&&(x.status==='open'||x.status==='submitted'));
     c.flag.visible=!!s;if(s)c.fl.material.color.set(S.co.color);c.fl.rotation.y=Math.sin(t*3+b.x)*.35;
@@ -4918,7 +4992,8 @@ function render3D(dt){if(!G.ok)return;const t=performance.now()/1000;
   // trains (MRT hidden while underground north of Gelora Raya)
   let ntr=0;const TST={krlH:[6,6.4,3.1,3.4,'#f1f1ee','#C4453A',1.1],krlV:[6,6.4,3.1,3.4,'#f1f1ee','#C4453A',1.1],mrt:[5,6.6,3,3.3,'#d5dae0','#2466B8',13],lrt:[3,5.2,2.4,2.8,'#f6f6f3','#1E9A8A',14.1]};
   if(L.transit&&S)trains.forEach(tr=>{const rl=RAIL[tr.k];let f=tr.dir>0?tr.f:1-tr.f;if(tr.stuck&&S.krl.down)f=tr.dir>0?Math.min(f,.35):Math.max(f,.65);const [x,y,a]=railAt(rl,clamp(f,0,1));
-    if(tr.k==='mrt'&&y<452)return;const st=TST[tr.k];for(let k=0;k<st[0]&&ntr<120;k++){const o=(k-(st[0]-1)/2)*(st[1]+.4);const X=TX(x)+Math.cos(a)*o,Z=TZ(y)+Math.sin(a)*o;
+    if(tr.k==='mrt'&&y<452)return;const st=TST[tr.k];
+    for(let k=0;k<st[0]&&ntr<120;k++){const o=(k-(st[0]-1)/2)*(st[1]+.4);const X=TX(x)+Math.cos(a)*o,Z=TZ(y)+Math.sin(a)*o;
       put(G.train,ntr,X,st[6],Z,st[1],st[3],st[2],-a,st[4]);put(G.trainS,ntr,X,st[6]+st[3]*.2,Z,st[1]+.06,st[3]*.16,st[2]+.06,-a,st[5]);put(G.trainW,ntr,X,st[6]+st[3]*.5,Z,st[1]-.5,st[3]*.24,st[2]+.08,-a);ntr++}});G.train.count=G.trainS.count=G.trainW.count=ntr;
   // planes
   const ps=L.transit?planeState():[];G.planes.forEach((pl,i)=>{const q=ps[i];pl.visible=!!q;if(!q)return;pl.position.set(TX(q.x),2.2+q.air*150,TZ(q.y));pl.rotation.set(0,-q.a,0);pl.rotateZ(q.air>0&&q.air<1?(Math.abs(q.a)>1.5?-.18:.12):0)});
