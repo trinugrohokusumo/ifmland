@@ -4772,8 +4772,10 @@ function init3D(){const host=$('#map3d');
   // pedagang kaki lima & ojek pangkalan di dekat stasiun
   G.vendors=[];G.ojol=[];const carts=[];
   Object.values(RAIL).forEach(rl=>rl.st.forEach(s=>{let x,y;if(Array.isArray(s[1]))[x,y]=s[1];else if(rl.horiz){x=s[1];y=385}else{x=rl.pts[0][0];y=s[1]}if(rl===RAIL.lrt||(rl===RAIL.mrt&&y<452))return;
-    const cx=x+9,cy=y+9;carts.push({x:TX(cx),z:TZ(cy),a:0,col:NCOL[carts.length%NCOL.length]});G.vendors.push({x:TX(cx)-1.4,z:TZ(cy),a:0,col:pick(SHIRT)});
-    for(let k=0;k<3;k++)G.ojol.push({x:TX(x-8-k*1.3),z:TZ(y+10),a:Math.PI/2,col:pick(['#1f7a4a','#1d1f22','#e6e6e6','#b7202a']),ojol:k<2})}));
+    let cx=x+9,cy=y+9,ct=0;while(rsHit(cx,cy,2.2)&&ct<8){cx+=2;cy+=2;ct++}
+    carts.push({x:TX(cx),z:TZ(cy),a:0,col:NCOL[carts.length%NCOL.length]});G.vendors.push({x:TX(cx)-1.4,z:TZ(cy),a:0,col:pick(SHIRT)});
+    let ox=x-8,oy=y+10,ot=0;while(rsHit(ox,oy,2.2)&&ot<8){oy+=2;ot++}
+    for(let k=0;k<3;k++)G.ojol.push({x:TX(ox-k*1.3),z:TZ(oy),a:Math.PI/2,col:pick(['#1f7a4a','#1d1f22','#e6e6e6','#b7202a']),ojol:k<2})}));
   stat(PT.cart,carts,true);
   // rain & clouds & flood
   const rg=new THREE.BufferGeometry();const rn=2600;rg.setAttribute('position',new THREE.BufferAttribute(new Float32Array(rn*6),3));G.rain=new THREE.LineSegments(rg,new THREE.LineBasicMaterial({color:0xa9c2d8,transparent:true,opacity:.45}));G.rain.frustumCulled=false;G.rain.visible=false;scene.add(G.rain);G.rainSeed=Array.from({length:rn},()=>[Math.random()*1400-700,Math.random()*320,Math.random()*1000-500]);
@@ -4834,7 +4836,7 @@ function init3D(){const host=$('#map3d');
    // gerobak kerak telor & pedagang di pelataran Tugu Mahkota
    const kt=[];for(let i=0;i<5;i++){const a=i/5*6.28+.4;kt.push({x:TX(530+Math.cos(a)*26),z:TZ(150+Math.sin(a)*22),a:a,col:'#c8302c'});G.vendors.push({x:TX(530+Math.cos(a)*26)-1.4,z:TZ(150+Math.sin(a)*22),a:a,col:'#f4f4f0'})}stat(PT.cart,kt,true);
    // pangkalan ojol di dekat mal & stasiun: motor & pengemudi berjaket hijau (ditambahkan ke daftar parkir ojol)
-   BUILDINGS.filter(b=>b.type==='Mal'||b.type==='Rumah Sakit').forEach(b=>{const d=clientDims(b);for(let k=0;k<4;k++)G.ojol.push({x:TX(b.x-d[0]/2+3+k*1.4),z:TZ(b.y+d[2]/2+7),a:Math.PI/2,col:dp(['#1d1f22','#e6e6e6','#b7202a']),ojol:1})});
+   BUILDINGS.filter(b=>b.type==='Mal'||b.type==='Rumah Sakit').forEach(b=>{const d=clientDims(b);let bx=b.x-d[0]/2+3,by=b.y+d[2]/2+7,bt=0;while(rsHit(bx,by,2.2)&&bt<8){by+=2;bt++}for(let k=0;k<4;k++)G.ojol.push({x:TX(bx+k*1.4),z:TZ(by),a:Math.PI/2,col:dp(['#1d1f22','#e6e6e6','#b7202a']),ojol:1})});
    // layang-layang di atas kampung (siang)
    G.kites=[];const kg=new THREE.PlaneGeometry(4.2,4.2);const kp=[];for(let i=0;i<14&&KAMP.length;i++){const k=KAMP[Math.floor(DR()*KAMP.length)];const m=new THREE.Mesh(kg,new THREE.MeshLambertMaterial({color:dp(['#c8302c','#e8b931','#2466B8','#2f8a5a','#f4f4f0','#b0306a']),side:THREE.DoubleSide}));m.rotation.z=Math.PI/4;
      const o={m,x:TX(k.x+(DR()-.5)*40),z:TZ(k.y+(DR()-.5)*40),y:28+DR()*26,gx:TX(k.x),gz:TZ(k.y),ph:DR()*6};scene.add(m);G.kites.push(o);kp.push(0,0,0,0,0,0)}
