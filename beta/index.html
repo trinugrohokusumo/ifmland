@@ -4335,12 +4335,13 @@ function railAt(r,f){let L=railLen(r)*f;for(let i=1;i<r.pts.length;i++){const a=
 function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 const SR=mulberry(20261005);const BLD=[];
 const blocks=[];const xsB=[0,...XS,1000],ysB=[42,...YS,640];
-for(let i=0;i<xsB.length-1;i++)for(let j=0;j<ysB.length-1;j++)blocks.push({x0:xsB[i]+7,y0:ysB[j]+7,x1:xsB[i+1]-7,y1:ysB[j+1]-7});
+for(let i=0;i<xsB.length-1;i++)for(let j=0;j<ysB.length-1;j++)blocks.push({x0:xsB[i]+5,y0:ysB[j]+5,x1:xsB[i+1]-5,y1:ysB[j+1]-5});
 function zoneOf(x,y){if(x<168&&y>50&&y<185)return'air';if(x>462&&x<598&&y>94&&y<196)return'park';if(x>462&&x<515&&y>454&&y<566)return'park';if(x>762&&x<898&&y>582)return'halim';if(x>905&&y>330&&y<445&&x<995)return'lot';return'city'}
-blocks.forEach(bk=>{for(let k=0;k<22;k++){const w=8+SR()*18,h=7+SR()*15;const x=bk.x0+SR()*(bk.x1-bk.x0-w),y=bk.y0+SR()*(bk.y1-bk.y0-h);if(x<bk.x0||y<bk.y0)continue;const z=zoneOf(x+w/2,y+h/2);if(z!=='city')continue;
+/* v80: lebih banyak percobaan isi & jarak antar gedung dipersempit -> pusat kota lebih padat, tanah kosong berkurang */
+blocks.forEach(bk=>{for(let k=0;k<40;k++){const w=7+SR()*16,h=6+SR()*13;const x=bk.x0+SR()*(bk.x1-bk.x0-w),y=bk.y0+SR()*(bk.y1-bk.y0-h);if(x<bk.x0||y<bk.y0)continue;const z=zoneOf(x+w/2,y+h/2);if(z!=='city')continue;
   if(Math.abs(y+h/2-385)<9||Math.abs(x+w/2-530)<9||(Math.abs(x+w/2-606)<8&&y>290))continue;
   if(BUILDINGS.some(b=>Math.hypot(b.x-(x+w/2),b.y-(y+h/2))<22)||Math.hypot(HQ.x-(x+w/2),HQ.y-(y+h/2))<16)continue;
-  if(BLD.some(o=>x<o.x+o.w+3&&x+w+3>o.x&&y<o.y+o.h+3&&y+h+3>o.y))continue;
+  if(BLD.some(o=>x<o.x+o.w+1.6&&x+w+1.6>o.x&&y<o.y+o.h+1.6&&y+h+1.6>o.y))continue;
   const cbd=x>440&&x<780&&y>190&&y<470;BLD.push({x,y,w,h,z:cbd?4+SR()*14:1.5+SR()*5,lit:SR()})}});
 BLD.sort((a,b)=>a.y-b.y);
 /* v44: gedung yang tertabrak jalan berkelok/sungai/tol disingkirkan; kampung padat & masjid ditambahkan */
@@ -4606,6 +4607,16 @@ function init3D(){const host=$('#map3d');
   signable.forEach(o=>{if(nsg>210||R2()>.68)return;const b=o.b;const side=Math.floor(R2()*4);const fw=side<2?b.w:b.h;const wid=Math.min(fw*.86,20);const topH=o.shape==='setback'?o.H*.68:o.H;
     face(o,side,wid,.9+topH-wid/8-1.2,pool[Math.floor(R2()*pool.length)]);nsg++;
     if(talSet.has(o)&&(o.shape==='box'||o.shape==='setback')&&R2()<.48){const m=new THREE.Mesh(plane,pool[Math.floor(R2()*pool.length)]);const w2=Math.min(b.w*.9,22);m.scale.set(w2,w2/4,1);m.position.set(o.cx,.9+o.H+w2/8+.3,TZ(b.y+b.h)-.6);scene.add(m);nsg++}});
+  // v80: billboard reklame berdiri bebas di persimpangan jalan utama - memadatkan kesan pusat kota tanpa gedung baru
+  {const bbRows=[42,...YS,640];let nbb=0;
+   for(let i=1;i<XS.length;i+=2)for(let j=1;j<bbRows.length-1;j+=2){if(nbb>=16)break;const x=XS[i],y=bbRows[j];if(zoneOf(x,y)!=='city')continue;
+    if(BUILDINGS.some(b=>Math.hypot(b.x-x,b.y-y)<18)||Math.hypot(HQ.x-x,HQ.y-y)<18)continue;if(rsHit(x,y,6))continue;
+    if(Math.abs(y-385)<10||Math.abs(x-530)<10)continue;
+    const X=TX(x),Z=TZ(y);const pole=new THREE.Mesh(box,L(0x7c8187));pole.scale.set(.9,12,.9);pole.position.set(X,6,Z);pole.castShadow=true;scene.add(pole);
+    const bw=9+R2()*4,bh=bw/2.6;const bbMat=pool[Math.floor(R2()*pool.length)];
+    const s1=new THREE.Mesh(plane,bbMat);s1.scale.set(bw,bh,1);s1.position.set(X,12.2,Z+.08);scene.add(s1);
+    const s2=new THREE.Mesh(plane,bbMat);s2.scale.set(bw,bh,1);s2.rotation.y=Math.PI;s2.position.set(X,12.2,Z-.08);scene.add(s2);
+    const fr=new THREE.Mesh(box,L(0x3a3f44));fr.scale.set(bw+.5,bh+.5,.35);fr.position.set(X,12.2,Z);scene.add(fr);nbb++}}
   // ciri khas gedung klien
   const addClientExtras=(b,d)=>{const X=TX(b.x),Z=TZ(b.y),top=.9+d[1];
     if(b.type==='Perkantoran A'){const c=new THREE.Mesh(pyr,L(0x7f9bb3));c.scale.set(d[0]*.8,16,d[2]*.8);c.position.set(X,top,Z);c.castShadow=true;scene.add(c);const a=new THREE.Mesh(antG,L(0xd0d3d5));a.scale.set(1.2,14,1.2);a.position.set(X,top+15,Z);scene.add(a)}
