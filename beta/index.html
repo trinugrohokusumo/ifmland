@@ -652,6 +652,16 @@ function rp(n){const s=Math.round(n);return (s<0?'−':'')+'Rp'+Math.abs(s).toLo
 function jt(n){if(n&&Math.abs(n)<1e6)return (n<0?'−':'')+'Rp'+Math.round(Math.abs(n)/1e3).toLocaleString('id-ID')+' rb';const v=n/1e6;return (v<0?'−':'')+'Rp'+Math.abs(v).toLocaleString('id-ID',{maximumFractionDigits:Math.abs(v)<10?1:0})+' jt'}
 function dateOf(day){return new Date(START+day*864e5)}
 function dow(day){return dateOf(day).getUTCDay()}
+/* v80: perkiraan kalender Hijriah (akurasi ±1-2 hari, cukup untuk nuansa cerita) agar event Ramadan/Muharram
+   tidak muncul acak di bulan manapun. Jangkar: 1 Ramadan 1447H ≈ 18 Feb 2026. 1 tahun Hijriah ≈ 354.367 hari,
+   1 bulan Hijriah ≈ 29.53 hari; Muharram (bulan ke-1) jatuh 8 bulan sebelum Ramadan (bulan ke-9).
+   Dibungkus try/catch dan dibatasi jendela wajar supaya aman walau kalender game melesat jauh ke masa depan.
+   Akurasi menurun untuk game-day yang sangat ekstrem (>puluhan tahun dari sekarang), tapi fallback aman ke 'bukan musim'.*/
+function hijriWindow(ms,anchorMs,winDays){const yr=354.367056*864e5;let n=Math.round((ms-anchorMs)/yr);let start=anchorMs+n*yr;if(ms<start-5*864e5){n--;start=anchorMs+n*yr}else if(ms>start+yr-5*864e5){n++;start=anchorMs+n*yr}return ms>=start-864e5&&ms<=start+winDays*864e5}
+function isRamadanDay(day){try{const ms=dateOf(day).getTime();return hijriWindow(ms,Date.UTC(2026,1,18),30)}catch(e){return false}}
+function isMuharramDay(day){try{const ms=dateOf(day).getTime();return hijriWindow(ms,Date.UTC(2026,1,18)-8*29.53059*864e5,30)}catch(e){return false}}
+function isHutRiSeason(day){const m=dateOf(day).getUTCMonth(),dd=dateOf(day).getUTCDate();return m===7&&dd>=1&&dd<=25}
+function isRainySeason(day){const m=dateOf(day).getUTCMonth();return m>=10||m<=2}
 function dstr(day,short){const d=dateOf(day);return short?`${d.getUTCDate()} ${BULAN[d.getUTCMonth()].slice(0,3)}`:`${HARI[d.getUTCDay()]}, ${d.getUTCDate()} ${BULAN[d.getUTCMonth()]} ${d.getUTCFullYear()}`}
 function dom(day){return dateOf(day).getUTCDate()}
 function isMonthEnd(day){return dom(day+1)===1}
@@ -1358,7 +1368,7 @@ function commDaily(d){if(!featOk('comm'))return;S.comm=S.comm||{};S.sites.filter
   if(S.inbox.some(m=>m.kind==='comm'&&m.site===s.id&&!m.done))return;
   if(R()>(['Pelabuhan','Pabrik','Gudang','Bandara'].includes(b.type)?.05:.03))return;
   const r=R();if(r<.4){const k=Math.max(1,Math.round(reqTotal(s.req)*(.1+R()*.1)));mail(c.tokoh,`Permintaan jatah kerja untuk warga ${c.name}`,`Assalamualaikum. Banyak pemuda warga kami menganggur. Kami minta ${k} warga dipekerjakan di ${b.n}. Kami siap bantu keamanan lingkungan.`,{kind:'comm',sub:'jatah',site:s.id,n:k,choices:[{k:'terima',l:`Sanggupi ${k} orang dalam 14 hari`},{k:'sebagian',l:`Sanggupi ${Math.ceil(k/2)} orang`},{k:'tolak',l:'Tolak dengan sopan'}]})}
-  else if(r<.75){const occ=pick(['peringatan HUT RI di lingkungan RW','santunan anak yatim bulan Muharam','perbaikan musala warga','takjil Ramadan untuk warga','bantuan warga terdampak genangan']);mail(c.tokoh,`Permohonan partisipasi: ${occ}`,`Warga ${c.name} mengajukan permohonan partisipasi perusahaan untuk ${occ}.`,{kind:'comm',sub:'donasi',site:s.id,choices:[{k:'d1',l:'Bantu Rp500 rb'},{k:'d2',l:'Bantu Rp1 jt'},{k:'d3',l:'Bantu Rp2,5 jt'},{k:'tolak',l:'Belum bisa membantu'}]})}
+  else if(r<.75){const opts=['perbaikan musala warga'];if(isHutRiSeason(d))opts.push('peringatan HUT RI di lingkungan RW');if(isMuharramDay(d))opts.push('santunan anak yatim bulan Muharam');if(isRamadanDay(d))opts.push('takjil Ramadan untuk warga');if(isRainySeason(d))opts.push('bantuan warga terdampak genangan');const occ=pick(opts);mail(c.tokoh,`Permohonan partisipasi: ${occ}`,`Warga ${c.name} mengajukan permohonan partisipasi perusahaan untuk ${occ}.`,{kind:'comm',sub:'donasi',site:s.id,choices:[{k:'d1',l:'Bantu Rp500 rb'},{k:'d2',l:'Bantu Rp1 jt'},{k:'d3',l:'Bantu Rp2,5 jt'},{k:'tolak',l:'Belum bisa membantu'}]})}
   else{const iss=pick(['bau dari TPS gedung sampai ke rumah warga','karyawan parkir motor di jalan kampung','suara mesin poles/pompa malam hari','sampah gedung tercecer di selokan warga']);mail(c.tokoh,'Keluhan warga sekitar',`Warga mengeluhkan ${iss} dari ${b.n}. Mohon ditindaklanjuti.`,{kind:'comm',sub:'keluhan',site:s.id,choices:[{k:'tangani',l:'Tangani & sosialisasi (Rp750 rb)'},{k:'abaikan',l:'Abaikan'}]})}})}
 function commChoice(m,k){const s=siteOf(m.site);if(!s)return;const c=commOf(s.b);
   if(m.sub==='jatah'){if(k==='terima'){c.quota=commLocals(s)+m.n;c.qUntil=day()+14;commAdd(s.b,10,'Menyanggupi jatah kerja warga')}else if(k==='sebagian'){c.quota=commLocals(s)+Math.ceil(m.n/2);c.qUntil=day()+14;commAdd(s.b,3,'Menyanggupi sebagian jatah kerja')}else commAdd(s.b,-15,'Menolak jatah kerja warga');
