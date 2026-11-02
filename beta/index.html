@@ -4776,7 +4776,10 @@ function init3D(){const host=$('#map3d');
   stat(PT.cart,carts,true);
   // rain & clouds & flood
   const rg=new THREE.BufferGeometry();const rn=2600;rg.setAttribute('position',new THREE.BufferAttribute(new Float32Array(rn*6),3));G.rain=new THREE.LineSegments(rg,new THREE.LineBasicMaterial({color:0xa9c2d8,transparent:true,opacity:.45}));G.rain.frustumCulled=false;G.rain.visible=false;scene.add(G.rain);G.rainSeed=Array.from({length:rn},()=>[Math.random()*1400-700,Math.random()*320,Math.random()*1000-500]);
-  G.clouds=[];const cm=new THREE.MeshLambertMaterial({color:0xffffff,transparent:true,opacity:.88});for(let i=0;i<12;i++){const c=new THREE.Group();for(let k=0;k<4;k++){const s=new THREE.Mesh(new THREE.SphereGeometry(18+Math.random()*16,10,8),cm);s.position.set(k*22-30,Math.random()*6,Math.random()*18-9);s.scale.y=.45;c.add(s)}c.position.set(Math.random()*1800-900,190+Math.random()*60,Math.random()*1000-560);scene.add(c);G.clouds.push(c)}G.cloudMat=cm;
+  // v80: awan diubah dari bola solid flat-shaded (kelihatan seperti tambalan putih keras di bawah tone mapping baru) jadi sprite lembut bertekstur gradasi
+  const cloudTex=mkTex(128,128,g=>{const gr=g.createRadialGradient(64,64,4,64,64,64);gr.addColorStop(0,'rgba(255,255,255,.95)');gr.addColorStop(.45,'rgba(255,255,255,.6)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,0,128,128)});
+  G.clouds=[];const cm=new THREE.SpriteMaterial({map:cloudTex,color:0xffffff,transparent:true,opacity:.6,depthWrite:false});
+  for(let i=0;i<12;i++){const c=new THREE.Group();for(let k=0;k<4;k++){const s=new THREE.Sprite(cm);const sc=20+Math.random()*16;s.scale.set(sc*1.7,sc,1);s.position.set(k*22-30,Math.random()*6,Math.random()*18-9);c.add(s)}c.position.set(Math.random()*1800-900,190+Math.random()*60,Math.random()*1000-560);scene.add(c);G.clouds.push(c)}G.cloudMat=cm;
   G.flood=[[760,90,140,110],[600,200,160,120],[760,320,140,130]].map(p=>{const f=new THREE.Mesh(new THREE.PlaneGeometry(p[2],p[3]),new THREE.MeshPhongMaterial({color:0x4d7fa8,transparent:true,opacity:.45,shininess:90}));f.rotation.x=-Math.PI/2;f.position.set(TX(p[0]+p[2]/2),1.25,TZ(p[1]+p[3]/2));f.visible=false;scene.add(f);return f});
 
   // v8: proyek pembangunan gedung (derek, perancah, pagar) & perbaikan jalan (kerucut, pembatas, ekskavator)
@@ -4902,7 +4905,7 @@ function render3D(dt){if(!G.ok)return;const t=performance.now()/1000;
   G.sideMats.forEach(m=>m.emissiveIntensity=nf*.95);G.lampGlow.material.opacity=nf*.95;G.headGlow.material.opacity=nf;G.neonMats.forEach(m=>m.emissiveIntensity=.12+nf*1.1);G.tailGlow.material.opacity=nf*.9;
   G.sea.material.color.set(nf>.5?0x2a3324:0xaebd92);if(G.lake)G.lake.material.color.set(nf>.5?0x0f2a40:0x4f8fb0);G.ground.material.color.set(nf>.5?0x2d3327:0xb9c2a6);
   // clouds & rain & flood
-  G.cloudMat.color.set(rain?0x8a929a:0xffffff);G.cloudMat.opacity=nf>.6?.35:.88;G.clouds.forEach((c,i)=>{c.position.x+=dt*(3+i%3)*(S?Math.min(4,S.speed/10+1):1);if(c.position.x>1000)c.position.x=-1000});
+  G.cloudMat.color.set(rain?0x8a929a:0xffffff);G.cloudMat.opacity=nf>.6?.25:.6;G.clouds.forEach((c,i)=>{c.position.x+=dt*(3+i%3)*(S?Math.min(4,S.speed/10+1):1);if(c.position.x>1000)c.position.x=-1000});
   G.rain.visible=!!rain;if(rain){const a=G.rain.geometry.attributes.position.array;const heavy=S.weather.heavy;G.rainSeed.forEach((r,i)=>{r[1]-=dt*(heavy?420:300);if(r[1]<0){r[1]=320;r[0]=Math.random()*1400-700;r[2]=Math.random()*1000-500}const x=r[0]+CAM.tx*.3,z=r[2]+CAM.tz*.3;a[i*6]=x;a[i*6+1]=r[1];a[i*6+2]=z;a[i*6+3]=x-1.5;a[i*6+4]=r[1]+(heavy?12:8);a[i*6+5]=z});G.rain.geometry.attributes.position.needsUpdate=true}
   G.flood.forEach(f=>f.visible=!!(S&&S.weather.flood&&S.weather.now));
   // ships
