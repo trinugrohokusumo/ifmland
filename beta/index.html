@@ -4462,12 +4462,12 @@ function cityExtras(){const put=G.put,box=G.box,L=G.L;
   // laut beriak
   const waveTex=mkTex(256,256,g=>{g.fillStyle='#e9eef2';g.fillRect(0,0,256,256);const R=mulberry(31);for(let i=0;i<420;i++){const x=R()*256,y=R()*256,l=6+R()*18;g.strokeStyle=R()<.55?`rgba(255,255,255,${.35+R()*.5})`:`rgba(150,170,190,${.25+R()*.35})`;g.lineWidth=1+R()*1.6;g.beginPath();g.moveTo(x,y);g.quadraticCurveTo(x+l/2,y-2-R()*2,x+l,y);g.stroke()}});
   waveTex.wrapS=waveTex.wrapT=THREE.RepeatWrapping;waveTex.repeat.set(70,32);G.waveTex=null;
-  G.hazeCol=new THREE.Color(0xd2c8b4);G.roadWet=new THREE.Color(0x23282d);G.roadDry=new THREE.Color(0x3b4046)}
+  G.hazeCol=new THREE.Color(0xdccfb0);G.roadWet=new THREE.Color(0x23282d);G.roadDry=new THREE.Color(0x3b4046)}
 function cityFxTick(t,nf,rain){if(!G.pools)return;const low=typeof PERF!=='undefined'&&PERF.low;
   G.pools.visible=nf>.05&&!low;G.pools.material.opacity=nf*(rain?.75:.55);
   if(G.waveTex){G.waveTex.offset.x=(t*.006)%1;G.waveTex.offset.y=(Math.sin(t*.15)*.02)}
   // kabut/haze khas Mahkota Raya: siang sedikit kecokelatan & jarak pandang lebih pendek, hujan lebih rapat
-  const f=G.scene.fog;if(rain){f.near=500;f.far=2300}else{f.near=1500-650*(1-nf);f.far=3600-700*(1-nf)}if(!rain&&nf<.9)f.color.lerp(G.hazeCol,.28*(1-nf));
+  const f=G.scene.fog;if(rain){f.near=500;f.far=2300}else{f.near=1500-650*(1-nf);f.far=3600-700*(1-nf)}if(!rain&&nf<.9)f.color.lerp(G.hazeCol,.15*(1-nf));
   if(G.roadMat)G.roadMat.color.copy(rain?G.roadWet:G.roadDry)}
 
 function init3D(){const host=$('#map3d');
