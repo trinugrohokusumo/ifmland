@@ -1,11 +1,12 @@
 <!doctype html>
 <html lang="id"><head>
+<meta name="robots" content="noindex, nofollow">
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="robots" content="noindex"><meta name="description" content="Game pelatihan facility management: menangkan tender, jalankan site, kelola tim dan arus kas, lalu kuasai Pulau Arunika.">
+<meta name="description" content="Game pelatihan facility management: menangkan tender, jalankan site, kelola tim dan arus kas, lalu kuasai Pulau Arunika.">
 <meta property="og:type" content="website"><meta property="og:site_name" content="IFM Land"><meta property="og:title" content="IFM Land">
 <meta property="og:description" content="Game pelatihan facility management: menangkan tender, jalankan site, kelola tim dan arus kas, lalu kuasai Pulau Arunika."><meta property="og:url" content="https://trinugrohokusumo.github.io/ifmland/beta/">
 <meta property="og:image" content="https://trinugrohokusumo.github.io/ifmland/logo-share.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
-<link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png"><link rel="manifest" href="../manifest.webmanifest">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png"><link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-title" content="IFM Land"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="theme-color" content="#0B1A36">
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="https://trinugrohokusumo.github.io/ifmland/logo-share.jpg">
 <title>IFM Land</title>
@@ -419,8 +420,8 @@ body.mob #body>.subrow{position:sticky;top:0;z-index:3;background:var(--surface)
 <div id="modalRoot"></div>
 <div id="confirmRoot"></div>
 
-<script src="three.min.js"></script>
-<script src="supabase.js"></script>
+<script src="../three.min.js"></script>
+<script src="../supabase.js"></script>
 <script>window.IFM_SB={url:'https://kshgvepcpqsowigiddbv.supabase.co',key:'sb_publishable_ZlmChFpdCqWMBl0T1PfVnw_u2_nDHOy'};</script>
 <script>
 "use strict";
@@ -4701,6 +4702,9 @@ function init3D(){const host=$('#map3d');
    for(let i=1;i<P.length;i++){const [x1,y1]=P[i-1],[x2,y2]=P[i];segBox(x1,y1,x2,y2,4.2,1.1,13,L(0xe8e5de));[1.9,-1.9].forEach(o=>{const a=Math.atan2(y2-y1,x2-x1);const nx=-Math.sin(a)*o,ny=Math.cos(a)*o;segBox(x1+nx,y1+ny,x2+nx,y2+ny,.25,.9,14.1,L(0xdedad2))});
     const len=Math.hypot(x2-x1,y2-y1);for(let s=0;s<=len;s+=28)cols.push([x1+(x2-x1)*s/len,y1+(y2-y1)*s/len,Math.atan2(y2-y1,x2-x1)])}
    const cI=inst(cyl,L(0xdcd8cf),cols.length,true);cols.forEach((c,i)=>put(cI,i,TX(c[0]),.9,TZ(c[1]),1,11.2,1));const hI=inst(box,L(0xdcd8cf),cols.length,true);cols.forEach((c,i)=>put(hI,i,TX(c[0]),11.6,TZ(c[1]),1.6,1.4,5,-c[2]))}
+  // v80: viaduct krlV di Tugu Mahkota - jalur melayang singkat supaya kereta tidak menembus alas tugu
+  {const dmat=L(0xdcd8cf),pmat=L(0xb9b4a9);segBox(530,115,530,175,9,1.2,8.2,dmat);
+   [125,145,165].forEach(zz=>{const pr=new THREE.Mesh(box,pmat);pr.position.set(TX(530),3.75,TZ(zz));pr.scale.set(1.6,7.5,1.6);pr.castShadow=true;pr.receiveShadow=true;scene.add(pr)})}
   // stations
   const stMat=L(0xe9e6de);Object.values(RAIL).forEach(rl=>rl.st.forEach(s=>{let x,y;if(Array.isArray(s[1]))[x,y]=s[1];else if(rl.horiz){x=s[1];y=385}else{x=rl.pts[0][0];y=s[1]}
     const elev=rl===RAIL.lrt?13:(rl===RAIL.mrt&&y>=452)?11:0;const under=rl===RAIL.mrt&&y<452;const m=new THREE.Mesh(box,under?L(0x2466b8):stMat);
@@ -4992,8 +4996,11 @@ function render3D(dt){if(!G.ok)return;const t=performance.now()/1000;
   // trains (MRT hidden while underground north of Gelora Raya)
   let ntr=0;const TST={krlH:[6,6.4,3.1,3.4,'#f1f1ee','#C4453A',1.1],krlV:[6,6.4,3.1,3.4,'#f1f1ee','#C4453A',1.1],mrt:[5,6.6,3,3.3,'#d5dae0','#2466B8',13],lrt:[3,5.2,2.4,2.8,'#f6f6f3','#1E9A8A',14.1]};
   if(L.transit&&S)trains.forEach(tr=>{const rl=RAIL[tr.k];let f=tr.dir>0?tr.f:1-tr.f;if(tr.stuck&&S.krl.down)f=tr.dir>0?Math.min(f,.35):Math.max(f,.65);const [x,y,a]=railAt(rl,clamp(f,0,1));
-    if(tr.k==='mrt'&&y<452)return;const st=TST[tr.k];for(let k=0;k<st[0]&&ntr<120;k++){const o=(k-(st[0]-1)/2)*(st[1]+.4);const X=TX(x)+Math.cos(a)*o,Z=TZ(y)+Math.sin(a)*o;
-      put(G.train,ntr,X,st[6],Z,st[1],st[3],st[2],-a,st[4]);put(G.trainS,ntr,X,st[6]+st[3]*.2,Z,st[1]+.06,st[3]*.16,st[2]+.06,-a,st[5]);put(G.trainW,ntr,X,st[6]+st[3]*.5,Z,st[1]-.5,st[3]*.24,st[2]+.08,-a);ntr++}});G.train.count=G.trainS.count=G.trainW.count=ntr;
+    if(tr.k==='mrt'&&y<452)return;const st=TST[tr.k];
+    // v80: jalur krlV melayang singkat saat melintasi Tugu Mahkota (530,145) agar tidak menembus alas tugu
+    let yel=st[6];if(tr.k==='krlV'){const dz=y-145;if(Math.abs(dz)<45)yel=st[6]+Math.cos(Math.min(1,Math.abs(dz)/45)*Math.PI/2)*9.5}
+    for(let k=0;k<st[0]&&ntr<120;k++){const o=(k-(st[0]-1)/2)*(st[1]+.4);const X=TX(x)+Math.cos(a)*o,Z=TZ(y)+Math.sin(a)*o;
+      put(G.train,ntr,X,yel,Z,st[1],st[3],st[2],-a,st[4]);put(G.trainS,ntr,X,yel+st[3]*.2,Z,st[1]+.06,st[3]*.16,st[2]+.06,-a,st[5]);put(G.trainW,ntr,X,yel+st[3]*.5,Z,st[1]-.5,st[3]*.24,st[2]+.08,-a);ntr++}});G.train.count=G.trainS.count=G.trainW.count=ntr;
   // planes
   const ps=L.transit?planeState():[];G.planes.forEach((pl,i)=>{const q=ps[i];pl.visible=!!q;if(!q)return;pl.position.set(TX(q.x),2.2+q.air*150,TZ(q.y));pl.rotation.set(0,-q.a,0);pl.rotateZ(q.air>0&&q.air<1?(Math.abs(q.a)>1.5?-.18:.12):0)});
   // orang: pejalan kaki, antrean halte, pedagang, dan tim Anda
